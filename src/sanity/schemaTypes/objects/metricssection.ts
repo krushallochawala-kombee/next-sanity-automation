@@ -1,43 +1,43 @@
-import {defineType, defineField} from 'sanity'
+import { defineType, defineField } from "sanity";
 
 export default defineType({
-  name: 'metricssection',
-  title: 'Metrics Section',
-  type: 'object',
+  name: "metricssection",
+  title: "Metrics Section",
+  type: "object",
   fields: [
     defineField({
-      name: 'title',
-      title: 'Section Title',
-      type: 'internationalizedArrayString',
+      name: "title",
+      title: "Section Title",
+      type: "internationalizedArrayString",
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'description',
-      title: 'Section Description',
-      type: 'internationalizedArrayText',
+      name: "description",
+      title: "Section Description",
+      type: "internationalizedArrayText",
     }),
     defineField({
-      name: 'metrics',
-      title: 'Metrics',
-      type: 'array',
+      name: "metrics",
+      title: "Metrics",
+      type: "array",
       validation: (Rule) => Rule.required().min(1),
       of: [
         {
-          type: 'metricitem',
+          type: "metricitem",
         },
       ],
     }),
   ],
   preview: {
     select: {
-      title: 'title.0.value',
-      subtitle: 'description.0.value',
+      title: "title.0.value",
+      subtitle: "description.0.value",
     },
-    prepare({title, subtitle}) {
+    prepare({ title, subtitle }) {
       return {
-        title: title || 'Untitled Metrics Section',
+        title: title || "Untitled Metrics Section",
         subtitle: subtitle,
-      }
+      };
     },
   },
-})
+});
