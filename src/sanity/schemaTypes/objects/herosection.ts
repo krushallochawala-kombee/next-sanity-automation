@@ -15,7 +15,6 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'internationalizedArrayText',
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'image',
@@ -23,9 +22,9 @@ export default defineType({
       type: 'internationalizedArrayImage',
     }),
     defineField({
-      name: 'ctaButton',
-      title: 'Call to Action Button',
-      type: 'button',
+      name: 'button',
+      title: 'Button',
+      type: 'button', // Referencing the 'button' object schema
     }),
   ],
   preview: {
@@ -36,7 +35,7 @@ export default defineType({
     },
     prepare({title, subtitle, media}) {
       return {
-        title: title || 'Hero Section',
+        title: title || 'Untitled Hero Section',
         subtitle: subtitle,
         media: media,
       }

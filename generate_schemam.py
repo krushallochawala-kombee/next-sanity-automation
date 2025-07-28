@@ -175,11 +175,12 @@ You are a top-tier Sanity.io Lead Architect. Analyze the lightweight JSON repres
 
 **Architectural Rules:**
 1.  **Documents vs. Objects:** `documents` are for queryable data collections (e.g., `post`, `page`, `siteSettings`, `header`, `footer`). `objects` are for structural components used on pages (e.g., `heroSection`, `ctaButton`).
-2.  **Header and Footer Rule (CRITICAL):** If you see 'Header' or 'Footer' sections in the Figma design, they MUST be created as `documents` (not objects). These will be referenced by `siteSettings`.
-3.  **The Grid Rule:** When you see a "structure" with repeating children of the same name (e.g., a "Team" section with multiple "Team Member" children), define a `document` for the underlying data (e.g., `teamMember`) and an `object` for the page section (e.g., `teamSection`) that will hold an array of `references` to those documents.
-4.  **Global Content Rule:** Always plan a `siteSettings` document. If header or footer sections are detected, create separate `header` and `footer` documents that will be referenced by `siteSettings`.
-5.  **CRITICAL NAMING:** All names in your output MUST be in EXACT camelCase format (e.g., "metricsSection", "companyLogo", "heroSection", "header", "footer").
-6.  **Always include a `page` document.**
+2.  **Singleton Documents Rule (CRITICAL):** `siteSettings`, `header`, and `footer` are SINGLETON documents - only one instance of each can exist. These will be created as separate documents with singleton behavior.
+3.  **Header and Footer Rule (CRITICAL):** If you see 'Header' or 'Footer' sections in the Figma design, they MUST be created as singleton `documents` (not objects). 
+4.  **The Grid Rule:** When you see a "structure" with repeating children of the same name (e.g., a "Team" section with multiple "Team Member" children), define a `document` for the underlying data (e.g., `teamMember`) and an `object` for the page section (e.g., `teamSection`) that will hold an array of `references` to those documents.
+5.  **Global Content Rule:** Always plan a `siteSettings` singleton document. If header or footer sections are detected, create separate singleton `header` and `footer` documents.
+6.  **CRITICAL NAMING:** All names in your output MUST be in EXACT camelCase format (e.g., "metricsSection", "companyLogo", "heroSection", "header", "footer").
+7.  **Always include a `page` document.**
 
 **Figma JSON Structure:**
 {json.dumps(sections_summary, indent=2)}
@@ -289,10 +290,16 @@ def phase_two_generate_schema_code(
     )
 
     special_instructions = ""
+    singleton_documents = ["siteSettings", "header", "footer"]
+
     if schema_name == "page":
         special_instructions = f"**SPECIAL INSTRUCTION FOR 'page':** This document MUST contain a `pageBuilder` field of type `array`. The `of` property for this array should be an array of objects, where each object has a `type` referencing one of the page sections from this list: {page_builder_objects}."
     elif schema_name == "siteSettings":
-        special_instructions = "**SPECIAL INSTRUCTION FOR 'siteSettings':** This document must contain a `header` field of type `reference` to `header` document, and a `footer` field of type `reference` to `footer` document."
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'siteSettings':** This is a SINGLETON document (only one instance can exist). Add `__experimental_singleton: true` to the schema. This document must contain a `header` field of type `reference` to `header` document, and a `footer` field of type `reference` to `footer` document."
+    elif schema_name == "header":
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'header':** This is a SINGLETON document (only one instance can exist). Add `__experimental_singleton: true` to the schema. Include essential header content like logo, navigation links, and any header-specific content."
+    elif schema_name == "footer":
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'footer':** This is a SINGLETON document (only one instance can exist). Add `__experimental_singleton: true` to the schema. Include essential footer content like links, social media, copyright, and any footer-specific content."
 
     # --- MODIFIED: Enhanced prompt with specific fixes for the identified issues ---
     prompt = f"""
@@ -634,6 +641,31 @@ def correct_generated_code(
         )
         corrections_applied.append("fixed mixed primitive/object types in arrays")
 
+    # Correction 9: Ensure singleton property is added for singleton documents
+    singleton_documents = ["siteSettings", "header", "footer"]
+    schema_name_match = re.search(r"name:\s*['\"]([^'\"]+)['\"]", code)
+    if schema_name_match:
+        schema_name_in_code = schema_name_match.group(1)
+        if schema_name_in_code in singleton_documents:
+            if "__experimental_singleton" not in code:
+                # Add singleton property after type declaration
+                type_pattern = r"(type:\s*['\"]document['\"],?)"
+                if re.search(type_pattern, code):
+                    code = re.sub(
+                        type_pattern, r"\1\n  __experimental_singleton: true,", code
+                    )
+                    corrections_applied.append(
+                        f"added singleton property for {schema_name_in_code}"
+                    )
+            # Ensure singleton is set to true if it exists but is false
+            elif "__experimental_singleton: false" in code:
+                code = code.replace(
+                    "__experimental_singleton: false", "__experimental_singleton: true"
+                )
+                corrections_applied.append(
+                    f"corrected singleton property for {schema_name_in_code}"
+                )
+
     # Log all corrections applied
     if corrections_applied:
         logging.info(
@@ -754,12 +786,118 @@ def validate_generated_code(code: str, schema_name: str) -> List[str]:
             "❌ Found mixed primitive/object types in array - will break Sanity Studio"
         )
 
+    # Check for singleton documents
+    schema_name_match = re.search(r"name:\s*['\"]([^'\"]+)['\"]", code)
+    singleton_documents = ["siteSettings", "header", "footer"]
+    if schema_name_match:
+        schema_name_in_code = schema_name_match.group(1)
+        if schema_name_in_code in singleton_documents:
+            if "__experimental_singleton" not in code:
+                issues.append(
+                    f"❌ Missing __experimental_singleton property for singleton document '{schema_name_in_code}'"
+                )
+            elif "__experimental_singleton: false" in code:
+                issues.append(
+                    f"❌ Singleton property should be true for '{schema_name_in_code}'"
+                )
+            elif "__experimental_singleton: true" in code:
+                # This is correct, but let's check if it's a document type
+                if 'type: "document"' not in code and "type: 'document'" not in code:
+                    issues.append(
+                        f"⚠️  Singleton property found but type is not 'document' for '{schema_name_in_code}'"
+                    )
+
     if issues:
         logging.warning(f"  ⚠️  Validation issues found in '{schema_name}':")
         for issue in issues:
             logging.warning(f"     {issue}")
 
     return issues
+
+
+def generate_singleton_structure(plan: dict):
+    """
+    Generates/updates the structure.ts file to handle singleton documents properly.
+    """
+    structure_file = "src/sanity/structure.ts"
+
+    # Get singleton documents from the plan
+    documents = plan.get("documents", [])
+    singleton_docs = [
+        doc for doc in documents if doc in ["siteSettings", "header", "footer"]
+    ]
+    regular_docs = [
+        doc for doc in documents if doc not in ["siteSettings", "header", "footer"]
+    ]
+
+    if not singleton_docs:
+        logging.info("No singleton documents found, skipping structure.ts generation")
+        return True
+
+    try:
+        # Generate structure configuration
+        singleton_items = []
+        for doc in singleton_docs:
+            title = doc.replace("Settings", " Settings").title()
+            if doc == "siteSettings":
+                title = "Site Settings"
+            elif doc == "header":
+                title = "Header"
+            elif doc == "footer":
+                title = "Footer"
+
+            singleton_items.append(
+                f"""    S.listItem()
+      .title('{title}')
+      .id('{doc}')
+      .child(
+        S.document()
+          .schemaType('{doc}')
+          .documentId('{doc}')
+      )"""
+            )
+
+        # Generate regular document list items
+        regular_items = []
+        for doc in regular_docs:
+            title = doc.replace("Settings", " Settings").title()
+            regular_items.append(
+                f"""    S.documentTypeListItem('{doc}').title('{title}')"""
+            )
+
+        structure_content = f"""import {{ StructureResolver }} from 'sanity/structure'
+
+export const structure: StructureResolver = (S) =>
+  S.list()
+    .title('Content')
+    .items([
+      // Singleton Documents
+{chr(10).join(singleton_items)},
+      
+      // Divider
+      S.divider(),
+      
+      // Regular Documents
+{chr(10).join(regular_items)},
+    ])
+"""
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(structure_file), exist_ok=True)
+
+        # Write the structure file
+        with open(structure_file, "w", encoding="utf-8") as f:
+            f.write(structure_content)
+
+        logging.info(f"✅ Generated structure.ts with singleton configuration:")
+        logging.info(f"   - Singleton documents: {', '.join(singleton_docs)}")
+        logging.info(f"   - Regular documents: {', '.join(regular_docs)}")
+
+        return True
+
+    except Exception as e:
+        logging.error(f"❌ Could not generate structure.ts: {e}")
+        return False
 
 
 def update_sanity_config_with_i18n():
@@ -1021,56 +1159,110 @@ def main():
 
     generate_all_files(corrected_schemas, plan)
 
+    # Generate structure.ts for singleton documents
+    structure_generated = generate_singleton_structure(plan)
+
     # Update sanity.config.ts with internationalization configuration
     config_updated = update_sanity_config_with_i18n()
 
     # Validate sanity.config.ts
     validate_sanity_config()
 
-    logging.info("\n✨ All Done! High-Quality, Validated Schemas Generated! ✨")
+    logging.info("\n✨ All Done! High-Quality, Singleton-Enabled Schemas Generated! ✨")
     print("\n--- NEXT STEPS ---")
     print(f"1. ✅ Generated schemas in '{SCHEMAS_DIR}' with auto-corrected code.")
+    if structure_generated:
+        print("2. ✅ Generated structure.ts with singleton document configuration!")
+        print("   - Header, Footer, and Site Settings are now singleton documents")
+        print("   - Only one instance of each can exist")
+    else:
+        print("2. ⚠️  structure.ts was not generated - please check manually.")
     if config_updated:
         print(
-            "2. ✅ Automatically configured sanity.config.ts with internationalization!"
+            "3. ✅ Automatically configured sanity.config.ts with internationalization!"
         )
-        print("3. ✅ Added English & Hindi language support with proper field types.")
+        print("4. ✅ Added English & Hindi language support with proper field types.")
     else:
-        print("2. ⚠️  sanity.config.ts was not updated - please check manually.")
-    print("4. **INSTALL REQUIRED PLUGIN:**")
+        print("3. ⚠️  sanity.config.ts was not updated - please check manually.")
+    print("5. **INSTALL REQUIRED PLUGIN:**")
     print("   Run: `npm install sanity-plugin-internationalized-array`")
-    print("\n5. **START YOUR DEVELOPMENT SERVER:**")
+    print("\n6. **START YOUR DEVELOPMENT SERVER:**")
     print("   Run: `npm run dev`")
     print("   Open: http://localhost:3000/studio")
-    print("\n6. **ENJOY YOUR INTERNATIONALIZED SCHEMA:**")
+    print("\n7. **ENJOY YOUR SINGLETON + INTERNATIONALIZED SCHEMA:**")
     print(
         "   🌍 You should now see language tabs (English/Hindi) on all content fields!"
     )
+    print("   🔒 Header, Footer, and Site Settings are singleton documents!")
     print("   📝 Create new pages and content with multi-language support!")
     print(
         "   🎨 All schemas are generated from your Figma design with proper i18n setup!"
     )
 
-    if not config_updated:
+    if not config_updated or not structure_generated:
         print("\n--- MANUAL CONFIGURATION NEEDED ---")
-        print("If automatic config update failed, manually add to sanity.config.ts:")
-        print("```js")
-        print(
-            "import { internationalizedArray } from 'sanity-plugin-internationalized-array';"
-        )
-        print("")
-        print("const SUPPORTED_LOCALES = [")
-        print("  {id: 'en', title: 'English'},")
-        print("  {id: 'hin', title: 'Hindi'},")
-        print("];")
-        print("")
-        print("// Add to plugins array:")
-        print("internationalizedArray({")
-        print("  languages: SUPPORTED_LOCALES,")
-        print("  defaultLanguages: ['en'],")
-        print("  fieldTypes: ['string', 'text', 'image', 'url', 'file', 'slug'],")
-        print("}),")
-        print("```")
+
+        if not structure_generated:
+            print(
+                "If structure.ts generation failed, manually create src/sanity/structure.ts:"
+            )
+            print("```ts")
+            print("import { StructureResolver } from 'sanity/structure'")
+            print("")
+            print("export const structure: StructureResolver = (S) =>")
+            print("  S.list()")
+            print("    .title('Content')")
+            print("    .items([")
+            print("      // Singleton Documents")
+            print("      S.listItem()")
+            print("        .title('Site Settings')")
+            print("        .id('siteSettings')")
+            print(
+                "        .child(S.document().schemaType('siteSettings').documentId('siteSettings')),"
+            )
+            print("      S.listItem()")
+            print("        .title('Header')")
+            print("        .id('header')")
+            print(
+                "        .child(S.document().schemaType('header').documentId('header')),"
+            )
+            print("      S.listItem()")
+            print("        .title('Footer')")
+            print("        .id('footer')")
+            print(
+                "        .child(S.document().schemaType('footer').documentId('footer')),"
+            )
+            print("      ")
+            print("      S.divider(),")
+            print("      ")
+            print("      // Regular Documents")
+            print("      S.documentTypeListItem('page').title('Pages'),")
+            print("      // Add other document types as needed")
+            print("    ])")
+            print("```")
+            print("")
+
+        if not config_updated:
+            print(
+                "If automatic config update failed, manually add to sanity.config.ts:"
+            )
+            print("```js")
+            print(
+                "import { internationalizedArray } from 'sanity-plugin-internationalized-array';"
+            )
+            print("")
+            print("const SUPPORTED_LOCALES = [")
+            print("  {id: 'en', title: 'English'},")
+            print("  {id: 'hin', title: 'Hindi'},")
+            print("];")
+            print("")
+            print("// Add to plugins array:")
+            print("internationalizedArray({")
+            print("  languages: SUPPORTED_LOCALES,")
+            print("  defaultLanguages: ['en'],")
+            print("  fieldTypes: ['string', 'text', 'image', 'url', 'file', 'slug'],")
+            print("}),")
+            print("```")
 
 
 if __name__ == "__main__":

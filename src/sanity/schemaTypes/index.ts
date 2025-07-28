@@ -3,40 +3,42 @@ import badge from './objects/badge'
 import button from './objects/button'
 import companylogo from './documents/companylogo'
 import ctasection from './objects/ctasection'
-import featureitem from './documents/featureitem'
+import feature from './documents/feature'
 import featuressection from './objects/featuressection'
 import footer from './documents/footer'
 import footerlink from './objects/footerlink'
-import footerlinkcolumn from './objects/footerlinkcolumn'
+import footerlinkscolumn from './documents/footerlinkscolumn'
 import header from './documents/header'
 import herosection from './objects/herosection'
-import logo from './objects/logo'
-import metricitem from './documents/metricitem'
+import imagecomponent from './objects/imagecomponent'
+import metric from './documents/metric'
 import metricssection from './objects/metricssection'
-import navigationlink from './objects/navigationlink'
+import navlink from './objects/navlink'
 import page from './documents/page'
 import quotesection from './objects/quotesection'
 import siteSettings from './documents/site-settings'
 import socialproofsection from './objects/socialproofsection'
+import textblock from './objects/textblock'
 
 export const schemaTypes = [
   badge,
   button,
   companylogo,
   ctasection,
-  featureitem,
+  feature,
   featuressection,
   footer,
   footerlink,
-  footerlinkcolumn,
+  footerlinkscolumn,
   header,
   herosection,
-  logo,
-  metricitem,
+  imagecomponent,
+  metric,
   metricssection,
-  navigationlink,
+  navlink,
   page,
   quotesection,
   siteSettings,
   socialproofsection,
+  textblock,
 ];

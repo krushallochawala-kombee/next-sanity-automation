@@ -7,35 +7,36 @@ export default defineType({
   fields: [
     defineField({
       name: 'label',
-      title: 'Link Label',
+      title: 'Label',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'link',
-      title: 'Link Target',
+      name: 'destination',
+      title: 'Destination',
+      description: 'Select an internal page or provide an external URL.',
       type: 'array',
-      validation: (Rule) => Rule.length(1).required(),
+      validation: (Rule) => Rule.required().max(1), // Ensures only one destination is selected
       of: [
         {
           type: 'object',
-          name: 'externalLink',
+          name: 'externalUrl',
           title: 'External URL',
           fields: [
             defineField({
               name: 'url',
               title: 'URL',
-              type: 'internationalizedArrayUrl',
+              type: 'internationalizedArrayUrl', // Rule 6: Use internationalizedArrayUrl for URL fields
               validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
             select: {
-              url: 'url.0.value',
+              url: 'url.0.value', // For internationalizedArrayUrl
             },
             prepare({url}) {
               return {
-                title: url || 'Untitled External Link',
+                title: url || 'External URL (Not Set)',
                 subtitle: 'External Link',
               }
             },
@@ -43,45 +44,26 @@ export default defineType({
         },
         {
           type: 'reference',
-          name: 'internalLink',
+          name: 'internalPage',
           title: 'Internal Page',
-          to: [{type: 'page'}],
-          options: {
-            disableNew: true, // Typically, you wouldn't create new pages from a link field
-          },
-          preview: {
-            select: {
-              title: 'title.0.value', // Assuming 'page' has an i18n title
-              subtitle: 'slug.current', // Assuming 'page' has a slug
-            },
-            prepare({title, subtitle}) {
-              return {
-                title: title || 'Untitled Internal Page',
-                subtitle: `Internal Page: ${subtitle || 'No Slug'}`,
-              }
-            },
-          },
+          to: [{type: 'page'}], // Rule 5 & 3b: Reference to 'page' document
         },
       ],
     }),
   ],
   preview: {
     select: {
-      title: 'label.0.value',
-      linkType: 'link.0._type',
-      externalUrl: 'link.0.url.0.value',
-      internalPageRef: 'link.0.title.0.value', // Assuming referenced 'page' has a title
+      title: 'label.0.value', // Rule 7: For i18n string fields
+      internalPageTitle: 'destination[0].internalPage->title.0.value', // Get title from referenced page
+      externalUrl: 'destination[0].externalUrl.url.0.value', // Get URL from external URL object
     },
-    prepare({title, linkType, externalUrl, internalPageRef}) {
-      let subtitle = 'No Link Target';
-      if (linkType === 'externalLink' && externalUrl) {
+    prepare({title, internalPageTitle, externalUrl}) {
+      let subtitle = 'No Destination';
+      if (internalPageTitle) {
+        subtitle = `Internal: ${internalPageTitle}`;
+      } else if (externalUrl) {
         subtitle = `External: ${externalUrl}`;
-      } else if (linkType === 'internalLink' && internalPageRef) {
-        subtitle = `Internal: ${internalPageRef}`;
-      } else if (linkType === 'internalLink') {
-        subtitle = 'Internal Page (No Title)';
       }
-
       return {
         title: title || 'Untitled Footer Link',
         subtitle: subtitle,

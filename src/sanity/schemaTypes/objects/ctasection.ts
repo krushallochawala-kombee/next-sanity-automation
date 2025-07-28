@@ -1,39 +1,39 @@
-import { defineType, defineField } from "sanity";
+import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: "ctasection",
-  title: "Call to Action Section",
-  type: "object",
+  name: 'ctasection',
+  title: 'Call to Action Section',
+  type: 'object',
   fields: [
     defineField({
-      name: "title",
-      title: "Title",
-      type: "internationalizedArrayString",
+      name: 'headline',
+      title: 'Headline',
+      type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "description",
-      title: "Description",
-      type: "internationalizedArrayText",
+      name: 'description',
+      title: 'Description',
+      type: 'internationalizedArrayText',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "button",
-      title: "Call to Action Button",
-      type: "button",
+      name: 'callToAction',
+      title: 'Call to Action Button',
+      type: 'button',
       validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
-      title: "title.0.value",
-      subtitle: "description.0.value",
+      title: 'headline.0.value',
+      subtitle: 'description.0.value',
     },
-    prepare({ title, subtitle }) {
+    prepare({title, subtitle}) {
       return {
-        title: title || "Untitled CTA Section",
-        subtitle: subtitle,
-      };
+        title: title || 'Untitled CTA Section',
+        subtitle: subtitle || 'No description',
+      }
     },
   },
-});
+})

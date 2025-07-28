@@ -1,38 +1,33 @@
-import { defineType, defineField } from "sanity";
+import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: "quotesection",
-  title: "Quote Section",
-  type: "object",
+  name: 'quotesection',
+  title: 'Quote Section',
+  type: 'object',
   fields: [
     defineField({
-      name: "quote",
-      title: "Quote",
-      type: "internationalizedArrayText",
+      name: 'quote',
+      title: 'Quote',
+      type: 'internationalizedArrayText',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "author",
-      title: "Author",
-      type: "internationalizedArrayString",
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: "source",
-      title: "Source / Role",
-      type: "internationalizedArrayString",
+      name: 'attribution',
+      title: 'Attribution',
+      type: 'internationalizedArrayString',
+      description: 'Who said the quote (e.g., "John Doe, CEO")',
     }),
   ],
   preview: {
     select: {
-      title: "quote.0.value",
-      subtitle: "author.0.value",
+      quote: 'quote.0.value',
+      attribution: 'attribution.0.value',
     },
-    prepare({ title, subtitle }) {
+    prepare({quote, attribution}) {
       return {
-        title: title || "Untitled Quote Section",
-        subtitle: subtitle ? `by ${subtitle}` : "",
-      };
+        title: quote ? `"${quote}"` : 'Untitled Quote Section',
+        subtitle: attribution ? `— ${attribution}` : 'No Attribution',
+      }
     },
   },
-});
+})

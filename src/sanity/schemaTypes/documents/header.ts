@@ -7,35 +7,33 @@ export default defineType({
   fields: [
     defineField({
       name: "logo",
-      title: "Logo",
-      type: "logo",
-      description: "The main site logo, typically linking to the homepage.",
+      title: "Company Logo",
+      type: "reference",
+      to: [{ type: "companylogo" }],
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "navigation",
+      name: "navigationLinks",
       title: "Navigation Links",
       type: "array",
-      description: "Links for the main navigation menu.",
-      of: [{ type: "navigationlink" }],
+      of: [{ type: "navlink" }],
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "callToAction",
+      name: "ctaButton",
       title: "Call to Action Button",
       type: "button",
-      description: "Optional call to action button in the header.",
     }),
   ],
   preview: {
     select: {
-      title: "logo.alt.0.value", // Assumes 'logo' object has an i18n 'alt' field
-      media: "logo.image.0.value.asset", // Assumes 'logo' object has an i18n 'image' field
+      logoImage: "logo.image.asset",
     },
-    prepare({ title, media }) {
+    prepare({ logoImage }) {
       return {
-        title: "Site Header", // Fixed title for a singleton document
-        subtitle: title ? `Logo: ${title}` : "No logo alt text",
-        media: media,
+        title: "Header Settings",
+        subtitle: "Manage site-wide header content",
+        media: logoImage,
       };
     },
   },

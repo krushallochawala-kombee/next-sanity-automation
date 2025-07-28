@@ -7,20 +7,20 @@ export default defineType({
   fields: [
     defineField({
       name: 'title',
-      title: 'Title',
+      title: 'Section Title',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'description',
-      title: 'Description',
+      title: 'Section Description',
       type: 'internationalizedArrayText',
     }),
     defineField({
       name: 'features',
       title: 'Features',
       type: 'array',
-      of: [{type: 'reference', to: [{type: 'featureitem'}]}],
+      of: [{type: 'reference', to: [{type: 'feature'}]}],
       validation: (Rule) => Rule.required().min(1),
     }),
   ],
@@ -31,7 +31,7 @@ export default defineType({
     },
     prepare({title, subtitle}) {
       return {
-        title: title || 'Untitled Features Section',
+        title: title || 'Features Section',
         subtitle: subtitle,
       }
     },
