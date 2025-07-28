@@ -36,6 +36,6 @@ export const structure: StructureResolver = (S) =>
       // Regular Documents
     S.documentTypeListItem('companylogo').title('Companylogo'),
     S.documentTypeListItem('feature').title('Feature'),
-    S.documentTypeListItem('metric').title('Metric'),
+    S.documentTypeListItem('metricitem').title('Metricitem'),
     S.documentTypeListItem('page').title('Page'),
     ])

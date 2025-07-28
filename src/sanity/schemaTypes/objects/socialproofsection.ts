@@ -9,44 +9,36 @@ export default defineType({
       name: 'title',
       title: 'Title',
       type: 'internationalizedArrayString',
+      description: 'The main heading for the social proof section.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'description',
       title: 'Description',
       type: 'internationalizedArrayText',
+      description: 'An optional subtitle or descriptive text for the section.',
     }),
     defineField({
-      name: 'proofItems',
-      title: 'Proof Items',
+      name: 'logos',
+      title: 'Company Logos',
       type: 'array',
-      description: 'Add quotes/testimonials or company logos to showcase social proof.',
+      description: 'A list of company logos to display.',
       of: [
-        {
-          type: 'reference',
-          name: 'quoteReference',
-          title: 'Quote/Testimonial',
-          to: [{type: 'quotesection'}],
-        },
-        {
-          type: 'reference',
-          name: 'companyLogoReference',
-          title: 'Company Logo',
-          to: [{type: 'companylogo'}],
-        },
+        {type: 'reference', to: [{type: 'companylogo'}]},
       ],
-      validation: (Rule) => Rule.min(1).required(),
+      validation: (Rule) => Rule.required().min(1).error('At least one logo is required for social proof.'),
     }),
   ],
   preview: {
     select: {
       title: 'title.0.value',
       subtitle: 'description.0.value',
+      // Media is not directly available on this object type, so we omit it for simplicity.
     },
     prepare({title, subtitle}) {
       return {
         title: title || 'Social Proof Section',
-        subtitle: subtitle || 'Displays testimonials or client logos',
+        subtitle: subtitle || 'No description provided',
       }
     },
   },

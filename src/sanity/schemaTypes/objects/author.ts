@@ -1,8 +1,8 @@
 import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: 'persondetails',
-  title: 'Person Details',
+  name: 'author',
+  title: 'Author',
   type: 'object',
   fields: [
     defineField({
@@ -12,25 +12,35 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'role',
-      title: 'Role',
-      type: 'internationalizedArrayString',
+      name: 'slug',
+      title: 'Slug',
+      type: 'internationalizedArraySlug',
+      options: {
+        source: 'name',
+        maxLength: 96,
+      },
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'image',
       title: 'Image',
       type: 'internationalizedArrayImage',
     }),
+    defineField({
+      name: 'bio',
+      title: 'Bio',
+      type: 'internationalizedArrayText',
+    }),
   ],
   preview: {
     select: {
       title: 'name.0.value',
-      subtitle: 'role.0.value',
+      subtitle: 'bio.0.value',
       media: 'image.0.value.asset',
     },
     prepare({title, subtitle, media}) {
       return {
-        title: title || 'Untitled Person',
+        title: title || 'Untitled Author',
         subtitle: subtitle,
         media: media,
       }

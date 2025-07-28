@@ -2,7 +2,7 @@ import {defineType, defineField} from 'sanity'
 
 export default defineType({
   name: 'header',
-  title: 'Global Header',
+  title: 'Header',
   type: 'document',
   fields: [
     defineField({
@@ -14,34 +14,30 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'navigationLinks',
-      title: 'Navigation Links',
+      name: 'mainNavigation',
+      title: 'Main Navigation',
       type: 'array',
-      of: [
-        {
-          type: 'reference',
-          to: [{type: 'page'}],
-        },
-      ],
-      description: 'Links that appear in the main navigation menu.',
-      validation: (Rule) => Rule.min(1).error('At least one navigation link is required.'),
+      of: [{type: 'link'}],
+      description: 'Links in the main navigation bar.',
+      validation: (Rule) => Rule.required().min(1),
     }),
     defineField({
-      name: 'callToActionButton',
-      title: 'Call to Action Button',
-      type: 'reference',
-      to: [{type: 'button'}],
-      description: 'Optional call to action button in the header.',
+      name: 'ctaButton',
+      title: 'Call-to-Action Button',
+      type: 'button',
+      description: 'An optional call-to-action button in the header.',
     }),
   ],
   preview: {
     select: {
-      navCount: 'navigationLinks.length',
+      logoMedia: 'logo.image.asset', // Assuming 'companylogo' document has an 'image' field of type image
+      navItemCount: 'mainNavigation.length',
     },
-    prepare({navCount}) {
+    prepare({logoMedia, navItemCount}) {
       return {
-        title: 'Global Header Settings',
-        subtitle: `Navigation Links: ${navCount || 0}`,
+        title: 'Global Header',
+        subtitle: navItemCount ? `${navItemCount} Navigation Items` : 'No Navigation Items',
+        media: logoMedia,
       }
     },
   },

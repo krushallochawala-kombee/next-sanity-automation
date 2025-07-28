@@ -6,32 +6,33 @@ export default defineType({
   type: 'object',
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
+      name: 'headline',
+      title: 'Headline',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
+      name: 'tagline',
+      title: 'Tagline/Description',
       type: 'internationalizedArrayText',
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'image',
-      title: 'Image',
+      title: 'Hero Image',
       type: 'internationalizedArrayImage',
     }),
     defineField({
-      name: 'callToActionButton',
-      title: 'Call to Action Button',
-      type: 'button',
+      name: 'ctaButtons',
+      title: 'Call to Action Buttons',
+      type: 'array',
+      of: [{type: 'button'}],
+      validation: (Rule) => Rule.max(2).warning('Consider limiting to one or two buttons for clarity.'),
     }),
   ],
   preview: {
     select: {
-      title: 'title.0.value',
-      subtitle: 'description.0.value',
+      title: 'headline.0.value',
+      subtitle: 'tagline.0.value',
       media: 'image.0.value.asset',
     },
     prepare({title, subtitle, media}) {

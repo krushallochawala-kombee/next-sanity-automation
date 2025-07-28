@@ -18,17 +18,17 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'image',
-      title: 'Image',
+      name: 'icon',
+      title: 'Icon',
       type: 'internationalizedArrayImage',
-      description: 'Optional image or icon for the feature.',
+      description: 'An optional icon or image representing this feature.',
     }),
   ],
   preview: {
     select: {
       title: 'title.0.value',
       subtitle: 'description.0.value',
-      media: 'image.0.value.asset',
+      media: 'icon.0.value.asset',
     },
     prepare({title, subtitle, media}) {
       return {

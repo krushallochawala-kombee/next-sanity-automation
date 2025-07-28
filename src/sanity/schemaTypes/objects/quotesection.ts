@@ -12,28 +12,33 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'attribution',
-      title: 'Attribution',
-      description: 'The person or entity the quote is attributed to.',
+      name: 'authorName',
+      title: 'Author Name',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'source',
-      title: 'Source (Optional)',
-      description: 'Additional context for the attribution (e.g., "CEO of Company X", "Their Website").',
+      name: 'authorTitle',
+      title: 'Author Title/Position',
       type: 'internationalizedArrayString',
+    }),
+    defineField({
+      name: 'authorImage',
+      title: 'Author Image',
+      type: 'internationalizedArrayImage',
     }),
   ],
   preview: {
     select: {
       title: 'quote.0.value',
-      subtitle: 'attribution.0.value',
+      subtitle: 'authorName.0.value',
+      media: 'authorImage.0.value.asset',
     },
-    prepare({title, subtitle}) {
+    prepare({title, subtitle, media}) {
       return {
         title: title || 'Untitled Quote Section',
-        subtitle: subtitle ? `— ${subtitle}` : '',
+        subtitle: subtitle ? `by ${subtitle}` : 'No Author',
+        media: media,
       }
     },
   },

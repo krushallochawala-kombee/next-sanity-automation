@@ -9,27 +9,26 @@ export default defineType({
       name: 'label',
       title: 'Label',
       type: 'internationalizedArrayString',
-      description: 'The visible text for the footer link.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'link',
-      title: 'Link Target',
-      type: 'reference',
-      to: [{type: 'page'}],
-      description: 'The internal page this footer link points to.',
+      title: 'Link Destination',
+      type: 'link', // Reference to the 'link' object type
       validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
       title: 'label.0.value',
-      linkTitle: 'link->title.0.value',
+      url: 'link.url.0.value', // Assuming the 'link' object has an internationalized 'url' field
+      pageTitle: 'link.internalLink->title.0.value', // Assuming 'link' can reference a page
     },
-    prepare({title, linkTitle}) {
+    prepare({title, url, pageTitle}) {
+      const subtitle = url || pageTitle || 'No destination set';
       return {
         title: title || 'Untitled Footer Link',
-        subtitle: linkTitle ? `Points to: ${linkTitle}` : 'No page linked',
+        subtitle: subtitle,
       }
     },
   },
