@@ -20,14 +20,8 @@ export default defineType({
       name: 'metrics',
       title: 'Metrics',
       type: 'array',
-      of: [
-        {
-          type: 'reference',
-          to: [{type: 'metric'}],
-          name: 'metric', // Unique name for this item type in the array
-        },
-      ],
-      validation: (Rule) => Rule.min(1).max(4), // Typically 3-4 metrics in a section
+      of: [{type: 'metric'}],
+      validation: (Rule) => Rule.min(1),
     }),
   ],
   preview: {

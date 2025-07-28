@@ -20,8 +20,13 @@ export default defineType({
       name: 'features',
       title: 'Features',
       type: 'array',
-      of: [{type: 'reference', to: [{type: 'feature'}]}],
       validation: (Rule) => Rule.required().min(1),
+      of: [
+        {
+          type: 'reference',
+          to: [{type: 'feature'}],
+        },
+      ],
     }),
   ],
   preview: {
@@ -31,7 +36,7 @@ export default defineType({
     },
     prepare({title, subtitle}) {
       return {
-        title: title || 'Features Section',
+        title: title || 'Untitled Features Section',
         subtitle: subtitle,
       }
     },

@@ -2,12 +2,12 @@ import {defineType, defineField} from 'sanity'
 
 export default defineType({
   name: 'ctasection',
-  title: 'Call to Action Section',
+  title: 'CTA Section',
   type: 'object',
   fields: [
     defineField({
-      name: 'headline',
-      title: 'Headline',
+      name: 'title',
+      title: 'Title',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
@@ -15,24 +15,22 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'internationalizedArrayText',
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'callToAction',
+      name: 'callToActionButton',
       title: 'Call to Action Button',
       type: 'button',
-      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
-      title: 'headline.0.value',
+      title: 'title.0.value',
       subtitle: 'description.0.value',
     },
     prepare({title, subtitle}) {
       return {
         title: title || 'Untitled CTA Section',
-        subtitle: subtitle || 'No description',
+        subtitle: subtitle,
       }
     },
   },

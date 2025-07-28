@@ -1,40 +1,48 @@
-import { defineType, defineField } from "sanity";
+import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: "header",
-  title: "Header",
-  type: "document",
+  name: 'header',
+  title: 'Global Header',
+  type: 'document',
   fields: [
     defineField({
-      name: "logo",
-      title: "Company Logo",
-      type: "reference",
-      to: [{ type: "companylogo" }],
+      name: 'logo',
+      title: 'Company Logo',
+      type: 'reference',
+      to: [{type: 'companylogo'}],
+      description: 'The logo displayed in the header.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "navigationLinks",
-      title: "Navigation Links",
-      type: "array",
-      of: [{ type: "navlink" }],
-      validation: (Rule) => Rule.required(),
+      name: 'navigationLinks',
+      title: 'Navigation Links',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{type: 'page'}],
+        },
+      ],
+      description: 'Links that appear in the main navigation menu.',
+      validation: (Rule) => Rule.min(1).error('At least one navigation link is required.'),
     }),
     defineField({
-      name: "ctaButton",
-      title: "Call to Action Button",
-      type: "button",
+      name: 'callToActionButton',
+      title: 'Call to Action Button',
+      type: 'reference',
+      to: [{type: 'button'}],
+      description: 'Optional call to action button in the header.',
     }),
   ],
   preview: {
     select: {
-      logoImage: "logo.image.asset",
+      navCount: 'navigationLinks.length',
     },
-    prepare({ logoImage }) {
+    prepare({navCount}) {
       return {
-        title: "Header Settings",
-        subtitle: "Manage site-wide header content",
-        media: logoImage,
-      };
+        title: 'Global Header Settings',
+        subtitle: `Navigation Links: ${navCount || 0}`,
+      }
     },
   },
-});
+})

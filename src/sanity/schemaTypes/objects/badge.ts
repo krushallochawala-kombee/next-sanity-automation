@@ -15,7 +15,7 @@ export default defineType({
       name: 'icon',
       title: 'Icon',
       type: 'internationalizedArrayImage',
-      description: 'Optional icon for the badge.',
+      description: 'Optional icon for the badge',
     }),
   ],
   preview: {

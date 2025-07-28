@@ -4,8 +4,14 @@ export default defineType({
   name: 'siteSettings',
   title: 'Site Settings',
   type: 'document',
-  __experimental_singleton: true,
   fields: [
+    defineField({
+      name: 'title',
+      title: 'Site Title',
+      type: 'internationalizedArrayString',
+      description: 'The main title for the website.',
+      validation: (Rule) => Rule.required(),
+    }),
     defineField({
       name: 'header',
       title: 'Header',
@@ -22,9 +28,13 @@ export default defineType({
     }),
   ],
   preview: {
-    prepare() {
+    select: {
+      title: 'title.0.value',
+    },
+    prepare({title}) {
       return {
-        title: 'Site Settings',
+        title: title || 'Site Settings',
+        subtitle: 'Global Site Configuration',
       }
     },
   },

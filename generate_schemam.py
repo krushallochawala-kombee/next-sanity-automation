@@ -174,13 +174,14 @@ def phase_one_architect_plan(sections: List[dict], model) -> Optional[dict]:
 You are a top-tier Sanity.io Lead Architect. Analyze the lightweight JSON representation of a Figma design and create a high-level, scalable, and DRY schema plan.
 
 **Architectural Rules:**
-1.  **Documents vs. Objects:** `documents` are for queryable data collections (e.g., `post`, `page`, `siteSettings`, `header`, `footer`). `objects` are for structural components used on pages (e.g., `heroSection`, `ctaButton`).
-2.  **Singleton Documents Rule (CRITICAL):** `siteSettings`, `header`, and `footer` are SINGLETON documents - only one instance of each can exist. These will be created as separate documents with singleton behavior.
-3.  **Header and Footer Rule (CRITICAL):** If you see 'Header' or 'Footer' sections in the Figma design, they MUST be created as singleton `documents` (not objects). 
-4.  **The Grid Rule:** When you see a "structure" with repeating children of the same name (e.g., a "Team" section with multiple "Team Member" children), define a `document` for the underlying data (e.g., `teamMember`) and an `object` for the page section (e.g., `teamSection`) that will hold an array of `references` to those documents.
-5.  **Global Content Rule:** Always plan a `siteSettings` singleton document. If header or footer sections are detected, create separate singleton `header` and `footer` documents.
-6.  **CRITICAL NAMING:** All names in your output MUST be in EXACT camelCase format (e.g., "metricsSection", "companyLogo", "heroSection", "header", "footer").
-7.  **Always include a `page` document.**
+1.  **Documents vs. Objects:** `documents` are for queryable data collections (e.g., `post`, `page`, `siteSettings`, `header`, `footer`). `objects` are for structural components used on pages (e.g., `heroSection`, `ctaButton`, `seo`).
+2.  **Global Documents Rule:** `siteSettings`, `header`, and `footer` are global documents that will be created as separate documents for site-wide content.
+3.  **Header and Footer Rule (CRITICAL):** If you see 'Header' or 'Footer' sections in the Figma design, they MUST be created as `documents` (not objects). 
+4.  **SEO Rule (CRITICAL):** Always create an `seo` object that can be embedded in page-type documents. This object should contain meta title, meta description, og:image, and other SEO fields.
+5.  **The Grid Rule:** When you see a "structure" with repeating children of the same name (e.g., a "Team" section with multiple "Team Member" children), define a `document` for the underlying data (e.g., `teamMember`) and an `object` for the page section (e.g., `teamSection`) that will hold an array of `references` to those documents.
+6.  **Global Content Rule:** Always plan a `siteSettings` document. If header or footer sections are detected, create separate `header` and `footer` documents.
+7.  **CRITICAL NAMING:** All names in your output MUST be in EXACT camelCase format (e.g., "metricsSection", "companyLogo", "heroSection", "header", "footer", "seo").
+8.  **Always include a `page` document and an `seo` object.**
 
 **Figma JSON Structure:**
 {json.dumps(sections_summary, indent=2)}
@@ -228,11 +229,13 @@ Return ONLY a valid JSON object with `documents` and `objects` keys. The values 
                     plan["documents"].remove(variant)
             plan["documents"].append("siteSettings")
 
-        # Ensure essential documents exist
+        # Ensure essential documents and objects exist
         if "page" not in plan["documents"]:
             plan["documents"].append("page")
         if "siteSettings" not in plan["documents"]:
             plan["documents"].append("siteSettings")
+        if "seo" not in plan["objects"]:
+            plan["objects"].append("seo")
 
         # Check if header/footer sections exist in Figma and ensure they're documents
         section_names = [to_camel_case(section["name"]) for section in sections]
@@ -290,16 +293,17 @@ def phase_two_generate_schema_code(
     )
 
     special_instructions = ""
-    singleton_documents = ["siteSettings", "header", "footer"]
 
     if schema_name == "page":
-        special_instructions = f"**SPECIAL INSTRUCTION FOR 'page':** This document MUST contain a `pageBuilder` field of type `array`. The `of` property for this array should be an array of objects, where each object has a `type` referencing one of the page sections from this list: {page_builder_objects}."
+        special_instructions = f"**SPECIAL INSTRUCTION FOR 'page':** This document MUST contain: 1) A `pageBuilder` field of type `array` with `of` property referencing page sections: {page_builder_objects}, AND 2) An `seo` field of type `seo` object for SEO metadata."
     elif schema_name == "siteSettings":
-        special_instructions = "**SPECIAL INSTRUCTION FOR 'siteSettings':** This is a SINGLETON document (only one instance can exist). Add `__experimental_singleton: true` to the schema. This document must contain a `header` field of type `reference` to `header` document, and a `footer` field of type `reference` to `footer` document."
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'siteSettings':** This is a global site settings document. This document must contain a `header` field of type `reference` to `header` document, and a `footer` field of type `reference` to `footer` document."
     elif schema_name == "header":
-        special_instructions = "**SPECIAL INSTRUCTION FOR 'header':** This is a SINGLETON document (only one instance can exist). Add `__experimental_singleton: true` to the schema. Include essential header content like logo, navigation links, and any header-specific content."
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'header':** This is a global header document. Include essential header content like logo, navigation links, and any header-specific content."
     elif schema_name == "footer":
-        special_instructions = "**SPECIAL INSTRUCTION FOR 'footer':** This is a SINGLETON document (only one instance can exist). Add `__experimental_singleton: true` to the schema. Include essential footer content like links, social media, copyright, and any footer-specific content."
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'footer':** This is a global footer document. Include essential footer content like links, social media, copyright, and any footer-specific content."
+    elif schema_name == "seo":
+        special_instructions = "**SPECIAL INSTRUCTION FOR 'seo':** This is an SEO object schema that contains ALL essential SEO fields: `metaTitle` (internationalizedArrayString, max 60 chars), `metaDescription` (internationalizedArrayText, max 160 chars), `ogImage` (internationalizedArrayImage), `ogTitle` (internationalizedArrayString), `ogDescription` (internationalizedArrayText), `keywords` (array of internationalizedArrayString), `noIndex` (boolean), and `canonicalUrl` (internationalizedArrayUrl). Include proper validation rules for character limits."
 
     # --- MODIFIED: Enhanced prompt with specific fixes for the identified issues ---
     prompt = f"""
@@ -641,30 +645,7 @@ def correct_generated_code(
         )
         corrections_applied.append("fixed mixed primitive/object types in arrays")
 
-    # Correction 9: Ensure singleton property is added for singleton documents
-    singleton_documents = ["siteSettings", "header", "footer"]
-    schema_name_match = re.search(r"name:\s*['\"]([^'\"]+)['\"]", code)
-    if schema_name_match:
-        schema_name_in_code = schema_name_match.group(1)
-        if schema_name_in_code in singleton_documents:
-            if "__experimental_singleton" not in code:
-                # Add singleton property after type declaration
-                type_pattern = r"(type:\s*['\"]document['\"],?)"
-                if re.search(type_pattern, code):
-                    code = re.sub(
-                        type_pattern, r"\1\n  __experimental_singleton: true,", code
-                    )
-                    corrections_applied.append(
-                        f"added singleton property for {schema_name_in_code}"
-                    )
-            # Ensure singleton is set to true if it exists but is false
-            elif "__experimental_singleton: false" in code:
-                code = code.replace(
-                    "__experimental_singleton: false", "__experimental_singleton: true"
-                )
-                corrections_applied.append(
-                    f"corrected singleton property for {schema_name_in_code}"
-                )
+    # Correction 9: Removed singleton property handling (no longer needed)
 
     # Log all corrections applied
     if corrections_applied:
@@ -786,26 +767,7 @@ def validate_generated_code(code: str, schema_name: str) -> List[str]:
             "❌ Found mixed primitive/object types in array - will break Sanity Studio"
         )
 
-    # Check for singleton documents
-    schema_name_match = re.search(r"name:\s*['\"]([^'\"]+)['\"]", code)
-    singleton_documents = ["siteSettings", "header", "footer"]
-    if schema_name_match:
-        schema_name_in_code = schema_name_match.group(1)
-        if schema_name_in_code in singleton_documents:
-            if "__experimental_singleton" not in code:
-                issues.append(
-                    f"❌ Missing __experimental_singleton property for singleton document '{schema_name_in_code}'"
-                )
-            elif "__experimental_singleton: false" in code:
-                issues.append(
-                    f"❌ Singleton property should be true for '{schema_name_in_code}'"
-                )
-            elif "__experimental_singleton: true" in code:
-                # This is correct, but let's check if it's a document type
-                if 'type: "document"' not in code and "type: 'document'" not in code:
-                    issues.append(
-                        f"⚠️  Singleton property found but type is not 'document' for '{schema_name_in_code}'"
-                    )
+    # Removed singleton document validation (no longer needed)
 
     if issues:
         logging.warning(f"  ⚠️  Validation issues found in '{schema_name}':")
@@ -815,29 +777,29 @@ def validate_generated_code(code: str, schema_name: str) -> List[str]:
     return issues
 
 
-def generate_singleton_structure(plan: dict):
+def generate_global_structure(plan: dict):
     """
-    Generates/updates the structure.ts file to handle singleton documents properly.
+    Generates/updates the structure.ts file to handle global documents properly.
     """
     structure_file = "src/sanity/structure.ts"
 
-    # Get singleton documents from the plan
+    # Get global documents from the plan
     documents = plan.get("documents", [])
-    singleton_docs = [
+    global_docs = [
         doc for doc in documents if doc in ["siteSettings", "header", "footer"]
     ]
     regular_docs = [
         doc for doc in documents if doc not in ["siteSettings", "header", "footer"]
     ]
 
-    if not singleton_docs:
-        logging.info("No singleton documents found, skipping structure.ts generation")
+    if not global_docs:
+        logging.info("No global documents found, skipping structure.ts generation")
         return True
 
     try:
         # Generate structure configuration
-        singleton_items = []
-        for doc in singleton_docs:
+        global_items = []
+        for doc in global_docs:
             title = doc.replace("Settings", " Settings").title()
             if doc == "siteSettings":
                 title = "Site Settings"
@@ -846,7 +808,7 @@ def generate_singleton_structure(plan: dict):
             elif doc == "footer":
                 title = "Footer"
 
-            singleton_items.append(
+            global_items.append(
                 f"""    S.listItem()
       .title('{title}')
       .id('{doc}')
@@ -854,7 +816,7 @@ def generate_singleton_structure(plan: dict):
         S.document()
           .schemaType('{doc}')
           .documentId('{doc}')
-      )"""
+      ),"""
             )
 
         # Generate regular document list items
@@ -862,7 +824,7 @@ def generate_singleton_structure(plan: dict):
         for doc in regular_docs:
             title = doc.replace("Settings", " Settings").title()
             regular_items.append(
-                f"""    S.documentTypeListItem('{doc}').title('{title}')"""
+                f"""    S.documentTypeListItem('{doc}').title('{title}'),"""
             )
 
         structure_content = f"""import {{ StructureResolver }} from 'sanity/structure'
@@ -871,14 +833,14 @@ export const structure: StructureResolver = (S) =>
   S.list()
     .title('Content')
     .items([
-      // Singleton Documents
-{chr(10).join(singleton_items)},
+      // Global Documents
+{chr(10).join(global_items)}
       
       // Divider
       S.divider(),
       
       // Regular Documents
-{chr(10).join(regular_items)},
+{chr(10).join(regular_items)}
     ])
 """
 
@@ -889,8 +851,8 @@ export const structure: StructureResolver = (S) =>
         with open(structure_file, "w", encoding="utf-8") as f:
             f.write(structure_content)
 
-        logging.info(f"✅ Generated structure.ts with singleton configuration:")
-        logging.info(f"   - Singleton documents: {', '.join(singleton_docs)}")
+        logging.info(f"✅ Generated structure.ts with global documents configuration:")
+        logging.info(f"   - Global documents: {', '.join(global_docs)}")
         logging.info(f"   - Regular documents: {', '.join(regular_docs)}")
 
         return True
@@ -1159,8 +1121,8 @@ def main():
 
     generate_all_files(corrected_schemas, plan)
 
-    # Generate structure.ts for singleton documents
-    structure_generated = generate_singleton_structure(plan)
+    # Generate structure.ts for global documents
+    structure_generated = generate_global_structure(plan)
 
     # Update sanity.config.ts with internationalization configuration
     config_updated = update_sanity_config_with_i18n()
@@ -1168,13 +1130,13 @@ def main():
     # Validate sanity.config.ts
     validate_sanity_config()
 
-    logging.info("\n✨ All Done! High-Quality, Singleton-Enabled Schemas Generated! ✨")
+    logging.info("\n✨ All Done! High-Quality, SEO-Enabled Schemas Generated! ✨")
     print("\n--- NEXT STEPS ---")
     print(f"1. ✅ Generated schemas in '{SCHEMAS_DIR}' with auto-corrected code.")
     if structure_generated:
-        print("2. ✅ Generated structure.ts with singleton document configuration!")
-        print("   - Header, Footer, and Site Settings are now singleton documents")
-        print("   - Only one instance of each can exist")
+        print("2. ✅ Generated structure.ts with global document configuration!")
+        print("   - Header, Footer, and Site Settings are now global documents")
+        print("   - Organized for easy content management")
     else:
         print("2. ⚠️  structure.ts was not generated - please check manually.")
     if config_updated:
@@ -1189,11 +1151,12 @@ def main():
     print("\n6. **START YOUR DEVELOPMENT SERVER:**")
     print("   Run: `npm run dev`")
     print("   Open: http://localhost:3000/studio")
-    print("\n7. **ENJOY YOUR SINGLETON + INTERNATIONALIZED SCHEMA:**")
+    print("\n7. **ENJOY YOUR SEO + INTERNATIONALIZED SCHEMA:**")
     print(
         "   🌍 You should now see language tabs (English/Hindi) on all content fields!"
     )
-    print("   🔒 Header, Footer, and Site Settings are singleton documents!")
+    print("   🔧 Header, Footer, and Site Settings are global documents!")
+    print("   📈 SEO fields automatically included in page documents!")
     print("   📝 Create new pages and content with multi-language support!")
     print(
         "   🎨 All schemas are generated from your Figma design with proper i18n setup!"
@@ -1213,7 +1176,7 @@ def main():
             print("  S.list()")
             print("    .title('Content')")
             print("    .items([")
-            print("      // Singleton Documents")
+            print("      // Global Documents")
             print("      S.listItem()")
             print("        .title('Site Settings')")
             print("        .id('siteSettings')")

@@ -7,18 +7,17 @@ import feature from './documents/feature'
 import featuressection from './objects/featuressection'
 import footer from './documents/footer'
 import footerlink from './objects/footerlink'
-import footerlinkscolumn from './documents/footerlinkscolumn'
+import footerlinkcolumn from './objects/footerlinkcolumn'
 import header from './documents/header'
 import herosection from './objects/herosection'
-import imagecomponent from './objects/imagecomponent'
 import metric from './documents/metric'
 import metricssection from './objects/metricssection'
-import navlink from './objects/navlink'
 import page from './documents/page'
+import persondetails from './objects/persondetails'
 import quotesection from './objects/quotesection'
+import seo from './objects/seo'
 import siteSettings from './documents/site-settings'
 import socialproofsection from './objects/socialproofsection'
-import textblock from './objects/textblock'
 
 export const schemaTypes = [
   badge,
@@ -29,16 +28,15 @@ export const schemaTypes = [
   featuressection,
   footer,
   footerlink,
-  footerlinkscolumn,
+  footerlinkcolumn,
   header,
   herosection,
-  imagecomponent,
   metric,
   metricssection,
-  navlink,
   page,
+  persondetails,
   quotesection,
+  seo,
   siteSettings,
   socialproofsection,
-  textblock,
 ];

@@ -7,26 +7,33 @@ export default defineType({
   fields: [
     defineField({
       name: 'quote',
-      title: 'Quote',
+      title: 'Quote Text',
       type: 'internationalizedArrayText',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'attribution',
       title: 'Attribution',
+      description: 'The person or entity the quote is attributed to.',
       type: 'internationalizedArrayString',
-      description: 'Who said the quote (e.g., "John Doe, CEO")',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'source',
+      title: 'Source (Optional)',
+      description: 'Additional context for the attribution (e.g., "CEO of Company X", "Their Website").',
+      type: 'internationalizedArrayString',
     }),
   ],
   preview: {
     select: {
-      quote: 'quote.0.value',
-      attribution: 'attribution.0.value',
+      title: 'quote.0.value',
+      subtitle: 'attribution.0.value',
     },
-    prepare({quote, attribution}) {
+    prepare({title, subtitle}) {
       return {
-        title: quote ? `"${quote}"` : 'Untitled Quote Section',
-        subtitle: attribution ? `— ${attribution}` : 'No Attribution',
+        title: title || 'Untitled Quote Section',
+        subtitle: subtitle ? `— ${subtitle}` : '',
       }
     },
   },

@@ -6,8 +6,8 @@ export default defineType({
   type: 'object',
   fields: [
     defineField({
-      name: 'heading',
-      title: 'Heading',
+      name: 'title',
+      title: 'Title',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
@@ -17,66 +17,36 @@ export default defineType({
       type: 'internationalizedArrayText',
     }),
     defineField({
-      name: 'testimonials',
-      title: 'Testimonials',
+      name: 'proofItems',
+      title: 'Proof Items',
       type: 'array',
-      validation: (Rule) => Rule.required().min(1),
+      description: 'Add quotes/testimonials or company logos to showcase social proof.',
       of: [
         {
-          name: 'testimonialItem',
-          type: 'object',
-          title: 'Testimonial',
-          fields: [
-            defineField({
-              name: 'quote',
-              title: 'Quote',
-              type: 'internationalizedArrayText',
-              validation: (Rule) => Rule.required(),
-            }),
-            defineField({
-              name: 'author',
-              title: 'Author',
-              type: 'internationalizedArrayString',
-              validation: (Rule) => Rule.required(),
-            }),
-            defineField({
-              name: 'role',
-              title: 'Role/Company',
-              type: 'internationalizedArrayString',
-            }),
-            defineField({
-              name: 'image',
-              title: 'Author Image',
-              type: 'internationalizedArrayImage',
-            }),
-          ],
-          preview: {
-            select: {
-              title: 'author.0.value',
-              subtitle: 'quote.0.value',
-              media: 'image.0.value.asset',
-            },
-            prepare({title, subtitle, media}) {
-              return {
-                title: title || 'Untitled Testimonial',
-                subtitle: subtitle,
-                media: media,
-              }
-            },
-          },
+          type: 'reference',
+          name: 'quoteReference',
+          title: 'Quote/Testimonial',
+          to: [{type: 'quotesection'}],
+        },
+        {
+          type: 'reference',
+          name: 'companyLogoReference',
+          title: 'Company Logo',
+          to: [{type: 'companylogo'}],
         },
       ],
+      validation: (Rule) => Rule.min(1).required(),
     }),
   ],
   preview: {
     select: {
-      title: 'heading.0.value',
+      title: 'title.0.value',
       subtitle: 'description.0.value',
     },
     prepare({title, subtitle}) {
       return {
         title: title || 'Social Proof Section',
-        subtitle: subtitle || 'Displays client testimonials',
+        subtitle: subtitle || 'Displays testimonials or client logos',
       }
     },
   },

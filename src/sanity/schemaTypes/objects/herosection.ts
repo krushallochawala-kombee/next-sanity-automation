@@ -15,6 +15,7 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'internationalizedArrayText',
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'image',
@@ -22,9 +23,9 @@ export default defineType({
       type: 'internationalizedArrayImage',
     }),
     defineField({
-      name: 'button',
-      title: 'Button',
-      type: 'button', // Referencing the 'button' object schema
+      name: 'callToActionButton',
+      title: 'Call to Action Button',
+      type: 'button',
     }),
   ],
   preview: {

@@ -1,38 +1,36 @@
 import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: 'feature',
-  title: 'Feature',
-  type: 'document',
+  name: 'persondetails',
+  title: 'Person Details',
+  type: 'object',
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
+      name: 'name',
+      title: 'Name',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'internationalizedArrayText',
-      validation: (Rule) => Rule.required(),
+      name: 'role',
+      title: 'Role',
+      type: 'internationalizedArrayString',
     }),
     defineField({
       name: 'image',
       title: 'Image',
       type: 'internationalizedArrayImage',
-      description: 'Optional image or icon for the feature.',
     }),
   ],
   preview: {
     select: {
-      title: 'title.0.value',
-      subtitle: 'description.0.value',
+      title: 'name.0.value',
+      subtitle: 'role.0.value',
       media: 'image.0.value.asset',
     },
     prepare({title, subtitle, media}) {
       return {
-        title: title || 'Untitled Feature',
+        title: title || 'Untitled Person',
         subtitle: subtitle,
         media: media,
       }

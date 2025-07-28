@@ -9,34 +9,32 @@ export default defineType({
       name: 'value',
       title: 'Value',
       type: 'internationalizedArrayString',
-      description: 'The numeric or text value of the metric (e.g., "10k+", "99%").',
+      description: 'The numeric or text value of the metric (e.g., "10K+", "99%") ',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'label',
       title: 'Label',
-      type: 'internationalizedArrayText',
-      description: 'A short description or label for the metric (e.g., "Happy Customers").',
+      type: 'internationalizedArrayString',
+      description: 'A brief label describing the metric (e.g., "Happy Customers", "Projects Completed")',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'icon',
-      title: 'Icon',
-      type: 'internationalizedArrayImage',
-      description: 'An optional icon representing the metric.',
+      name: 'description',
+      title: 'Description',
+      type: 'internationalizedArrayText',
+      description: 'Optional, longer description for the metric.',
     }),
   ],
   preview: {
     select: {
-      title: 'value.0.value',
-      subtitle: 'label.0.value',
-      media: 'icon.0.value.asset',
+      value: 'value.0.value',
+      label: 'label.0.value',
     },
-    prepare({title, subtitle, media}) {
+    prepare({value, label}) {
       return {
-        title: title || 'Untitled Metric',
-        subtitle: subtitle,
-        media: media,
+        title: value || 'Untitled Metric',
+        subtitle: label,
       }
     },
   },

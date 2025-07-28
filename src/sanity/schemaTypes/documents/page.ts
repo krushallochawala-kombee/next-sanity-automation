@@ -22,37 +22,32 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'internationalizedArrayText',
-      description: 'Used for SEO and social sharing descriptions.',
-    }),
-    defineField({
       name: 'pageBuilder',
       title: 'Page Sections',
       type: 'array',
-      description: 'Add and arrange sections for this page.',
       of: [
         {type: 'herosection'},
-        {type: 'featuressection'},
         {type: 'ctasection'},
-        {type: 'quotesection'},
+        {type: 'featuressection'},
         {type: 'metricssection'},
+        {type: 'quotesection'},
         {type: 'socialproofsection'},
-        {type: 'imagecomponent'},
-        {type: 'textblock'},
       ],
+    }),
+    defineField({
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
       title: 'title.0.value',
-      subtitle: 'slug.0.current',
     },
-    prepare({title, subtitle}) {
+    prepare({title}) {
       return {
         title: title || 'Untitled Page',
-        subtitle: subtitle ? `/${subtitle}` : 'No slug set',
       }
     },
   },
