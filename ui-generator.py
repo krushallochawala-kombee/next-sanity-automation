@@ -8,37 +8,31 @@ from dotenv import load_dotenv
 from PIL import Image
 import io
 import google.generativeai as genai
-import time
+import json
 
 
 # --- Helper Functions ---
 def print_step(message):
-    """Prints a formatted step header."""
     print(f"\n{'='*25} {message} {'='*25}")
 
 
 def print_success(message):
-    """Prints a success message."""
     print(f"✅ {message}")
 
 
 def print_info(message):
-    """Prints an informational message."""
     print(f"ℹ️  {message}")
 
 
 def print_error(message):
-    """Prints an error message and exits the script."""
     print(f"❌ ERROR: {message}")
     exit(1)
 
 
 def run_command(command_list, cwd=None, step_description=""):
-    """Runs a command, captures its output, and handles errors."""
     command_string = " ".join(command_list)
     print_info(f"Running command: {command_string}")
     try:
-        # Use shell=True for compatibility with npx on different systems
         process = subprocess.run(
             command_string,
             cwd=cwd,
@@ -46,133 +40,112 @@ def run_command(command_list, cwd=None, step_description=""):
             capture_output=True,
             text=True,
             shell=True,
-            encoding="utf-8",  # Force UTF-8 encoding to fix Unicode errors
-            errors="ignore",  # Ignore encoding errors
+            encoding="utf-8",
+            errors="replace",  # Replace problematic characters instead of failing
         )
-        print_success(f"{step_description} completed successfully.")
+        print_success(f"{step_description} completed.")
         return process.stdout
     except subprocess.CalledProcessError as e:
-        print_error(f"Command failed for step '{step_description}'.\nError: {e.stderr}")
-    return None
+        print_error(f"Command failed for '{step_description}'.\nError: {e.stderr}")
 
 
-# --- Type & Query Generation (from Official Sanity Types) ---
+def format_name_to_pascal_case(name: str) -> str:
+    return name.replace("-", " ").replace("_", " ").title().replace(" ", "")
 
 
-def generate_and_read_sanity_types():
-    """Runs `npx sanity typegen generate` and returns the content of the generated types file."""
-    print_step("Generating TypeScript types from your Sanity schemas")
-    # First extract the schema, then generate types
-    run_command(
-        ["npx", "sanity", "schema", "extract"],
-        step_description="Sanity Schema Extraction",
-    )
-    run_command(
-        ["npx", "sanity", "typegen", "generate"],
-        step_description="Sanity Type Generation",
-    )
+# --- DATA STRUCTURE ANALYSIS ---
 
+
+def get_all_sanity_schemas_as_json():
+    """Reads existing sanity.types.ts file or generates it, then parses to create JSON representation of schemas."""
+    print_step("Analyzing all available Sanity schemas")
+
+    # Check if sanity.types.ts already exists
     types_file = Path("sanity.types.ts")
     if not types_file.exists():
+        print_info("sanity.types.ts not found. Generating types...")
+        print_info("Please run this command manually first:")
+        print_info("npx sanity typegen generate")
         print_error(
-            "`sanity.types.ts` was not created. Ensure your Sanity project is configured correctly and you have at least one schema."
+            "sanity.types.ts file not found. Please generate it first with 'npx sanity typegen generate'"
         )
 
-    print_success("Successfully read generated Sanity types.")
-    return types_file.read_text()
+    # Read the types file
 
+    try:
+        with open(types_file, "r", encoding="utf-8") as f:
+            types_content = f.read()
+    except Exception as e:
+        print_error(f"Error reading sanity.types.ts: {e}")
 
-def parse_types_and_select_schema(types_content: str):
-    """Parses the generated type definitions and presents an interactive menu to select a schema."""
-    # This regex finds exported types that are objects, typical for document schemas
+    if not types_content:
+        print_error("sanity.types.ts file is empty.")
+
+    # Enhanced schema parsing
     schema_pattern = re.compile(
-        r"export\s+type\s+([\w\d_]+)\s*=\s*({[\s\S]*?});", re.MULTILINE
+        r"export\s+type\s+([\w\d_]+)\s*=\s*({[\s\S]*?})\s*(?:&|\||\s)*;", re.MULTILINE
     )
+    all_schemas = {}
 
-    schemas = []
     for match in schema_pattern.finditer(types_content):
         type_name = match.group(1)
-        # Filter out Sanity's internal utility types to present a clean list
-        if not type_name.startswith("Sanity") and type_name != "CrossDatasetReference":
-            schemas.append({"name": type_name, "definition": match.group(2)})
+        type_body = match.group(2)
 
-    if not schemas:
+        # Skip utility types and focus on actual schema types
+        if (
+            not type_name.startswith("Sanity")
+            and type_name != "CrossDatasetReference"
+            and not type_name.startswith("InternationalizedArray")
+            and "_id" in type_body
+            or "_type" in type_body
+        ):  # Only include document/object types
+
+            fields = []
+            # Improved field pattern to handle complex types
+            field_pattern = re.compile(
+                r"(\w+)\??:\s*([^;]+);", re.MULTILINE | re.DOTALL
+            )
+
+            for field_match in field_pattern.finditer(type_body):
+                field_name = field_match.group(1)
+                field_type = field_match.group(2).strip()
+
+                # Skip internal Sanity fields except _type and _key
+                if not (
+                    field_name.startswith("_") and field_name not in ["_type", "_key"]
+                ):
+                    fields.append(
+                        {
+                            "name": field_name,
+                            "type": field_type,
+                            "optional": "?" in field_match.group(0),
+                        }
+                    )
+
+            all_schemas[type_name] = {
+                "fields": fields,
+                "is_document": "_id" in type_body and "_createdAt" in type_body,
+            }
+
+    if not all_schemas:
         print_error(
-            "No exportable document types found in `sanity.types.ts`. Please define at least one schema in your `schemaTypes` directory."
+            "No exportable document types found. Please define at least one schema."
         )
 
-    print_step("Please select a schema to generate the UI for")
-    for i, schema in enumerate(schemas):
-        print(f"  [{i + 1}] {schema['name']}")
-    print("-" * 60)
+    print_success(f"Found {len(all_schemas)} schemas to work with.")
 
-    while True:
-        try:
-            choice = input("Enter the number of the schema: ")
-            choice_index = int(choice) - 1
-            if 0 <= choice_index < len(schemas):
-                selected = schemas[choice_index]
-                print_success(f"You selected schema: '{selected['name']}'")
-                return selected
-            else:
-                print("Invalid number. Please try again.")
-        except (ValueError, IndexError):
-            print("Invalid input. Please enter a number from the list.")
+    # Save schemas to a JSON file for debugging
+    with open("schema.json", "w", encoding="utf-8") as f:
+        json.dump(all_schemas, f, indent=2, ensure_ascii=False)
+    print_info("Schema analysis saved to schema.json")
 
-
-def generate_groq_from_type(schema_name: str, type_definition: str) -> str:
-    """Generates a GROQ query based on the fields present in a TypeScript interface."""
-    print_step(f"Generating GROQ Query for '{schema_name}'")
-
-    # Regex to find property names in the TypeScript type definition
-    field_pattern = re.compile(r"(\w+)\??:\s*.*;", re.MULTILINE)
-    fields = []
-
-    # Iterate over the lines of the type definition to extract field names
-    for line in type_definition.split("\n"):
-        match = field_pattern.match(line.strip())
-        if match:
-            field_name = match.group(1)
-            # Exclude Sanity's internal metadata fields
-            if field_name not in ["_id", "_type", "_rev", "_createdAt", "_updatedAt"]:
-                field_type_str = line.split(":")[1].strip()
-                # If a field is an image, expand its asset reference in the query
-                if "SanityImage" in field_type_str:
-                    fields.append(
-                        f"'{field_name}': {field_name}{{ asset->{{ url, metadata }} }}"
-                    )
-                # If a field appears to be a reference, expand it
-                elif "->" in field_name or "reference" in field_name.lower():
-                    fields.append(f"'{field_name}': {field_name}->")
-                else:
-                    fields.append(f"'{field_name}': {field_name}")
-
-    query_fields_str = ",\n    ".join(fields)
-
-    # Use the PascalCase schema name for the query function name
-    query_function_name = f"get{schema_name}BySlug"
-    # The document type in Sanity is usually the lowercase version
-    document_type = schema_name.lower()
-
-    query = f"""
-import type {{ {schema_name} }} from './types'
-
-// This query is designed to fetch all the data needed for the {schema_name} component.
-// It is based on the automatically generated TypeScript type.
-export const {query_function_name}Query = `*[_type == "{document_type}" && slug.current == $slug][0]{{
-    _id,
-    {query_fields_str}
-}}`
-"""
-    print_success("GROQ query generated successfully.")
-    return query
+    return all_schemas
 
 
 # --- FIGMA INTERACTION ---
 
 
 def get_figma_document_data(api_token: str, file_id: str):
-    """Fetches Figma document data using the API."""
     url = f"https://api.figma.com/v1/files/{file_id}"
     headers = {"X-Figma-Token": api_token}
     try:
@@ -185,33 +158,25 @@ def get_figma_document_data(api_token: str, file_id: str):
 
 
 def select_figma_frame(figma_data: dict):
-    """Presents an interactive menu to select a Figma frame."""
     candidate_frames = []
-    # A good candidate for a page is a wide frame directly on a canvas
-    min_width_for_candidate = 400
+    min_width = 400
     for page in figma_data["document"].get("children", []):
         if page.get("type") == "CANVAS":
             for frame in page.get("children", []):
                 if (
                     frame.get("type") == "FRAME"
-                    and frame.get("absoluteBoundingBox", {}).get("width", 0)
-                    > min_width_for_candidate
+                    and frame.get("absoluteBoundingBox", {}).get("width", 0) > min_width
                 ):
                     candidate_frames.append(
-                        {
-                            "id": frame.get("id"),
-                            "name": frame.get("name", "Unnamed Frame"),
-                            "page_name": page.get("name", "Unnamed Page"),
-                        }
+                        {"id": frame.get("id"), "name": frame.get("name", "Unnamed")}
                     )
-    if not candidate_frames:
-        print_error(
-            "No suitable top-level frames found in Figma file. Ensure there are frames with a width > 400px directly on a page."
-        )
 
-    print_step("Please select the corresponding Figma design for your schema")
+    if not candidate_frames:
+        print_error(f"No suitable frames found (width > {min_width}px).")
+
+    print_step("Please select the Figma design to generate")
     for i, frame in enumerate(candidate_frames):
-        print(f"  [{i + 1}] {frame['name']} (on page: '{frame['page_name']}')")
+        print(f"  [{i + 1}] {frame['name']}")
 
     while True:
         try:
@@ -227,7 +192,6 @@ def select_figma_frame(figma_data: dict):
 
 
 def export_figma_frame_as_image(node_id: str, figma_api_key: str, figma_file_id: str):
-    """Exports a Figma frame as a PNG image."""
     print_info(f"Exporting image for Figma node {node_id}...")
     url = f"https://api.figma.com/v1/images/{figma_file_id}"
     params = {"ids": node_id, "format": "png", "scale": "1.5"}
@@ -237,8 +201,7 @@ def export_figma_frame_as_image(node_id: str, figma_api_key: str, figma_file_id:
         response.raise_for_status()
         image_url = response.json().get("images", {}).get(node_id)
         if not image_url:
-            raise ValueError("No image URL returned from API.")
-
+            raise ValueError("No image URL returned.")
         image_response = requests.get(image_url, timeout=60)
         image_response.raise_for_status()
         print_success("Figma image exported successfully.")
@@ -247,200 +210,504 @@ def export_figma_frame_as_image(node_id: str, figma_api_key: str, figma_file_id:
         print_error(f"Image export for node {node_id} failed: {e}")
 
 
-# --- AI-DRIVEN UI GENERATION ---
+# --- AI-DRIVEN CODE GENERATION ---
 
 
-def generate_ui_prompt(type_definition_with_name: str) -> str:
-    """Generates a focused prompt for the AI to create the UI component."""
+def generate_ai_prompt(all_schemas_json: str, component_name: str) -> str:
     return f"""
-You are an expert front-end developer specializing in creating pixel-perfect, fully dynamic UIs with Next.js and Tailwind CSS.
-Your task is to create a React component that is visually identical to the provided Figma image. This component must not contain any static text or hardcoded content; all content must be rendered from a `data` prop.
+You are an expert full-stack developer who reverse-engineers web designs into fully-functional, data-driven applications. Your task is to analyze a Figma design, intelligently map its content to a list of available Sanity schemas, and generate all the necessary code, including a perfectly tailored GROQ query.
 
-**INPUT 1: The Data Contract.**
-The component you create will receive a `data` prop. This prop's structure is defined by the following TypeScript type. You must create UI elements for every field in this type.
+**INPUT 1: The Visual Design (as an image)**
+This is the visual "blueprint." Your generated component must be a pixel-perfect, responsive replica.
 
+**INPUT 2: All Available Sanity Schemas**
+This JSON object describes every piece of data you are allowed to use. You must map the content you see in the design to the fields in these schemas.
+```json
+{all_schemas_json}
+```
+
+YOUR TASK: Generate a complete, self-contained module for a component named '{component_name}'.
+
+**IMPORTANT DATA STRUCTURE REQUIREMENTS:**
+- Text fields use PortableText (PortableTextBlock[]) instead of simple strings
+- Images are structured as: {{ asset?: {{ url: string; altText?: string }} }}
+- All text content should be rendered using @portabletext/react PortableText component
+- Links are objects with externalUrl (PortableText) and internalLink (reference with slug)
+- Use proper helper functions to extract plain text when needed for attributes
+
+Step 1: Data-to-Design Mapping (Your internal thought process):
+Analyze the visual design. Identify all dynamic elements (headings, text blocks, images, lists, buttons).
+Look at the available schemas and their fields. Find the best match.
+Decide which schema is the primary document type for this component (e.g., 'Page'). This will be the entry point for your query.
+
+Step 2: Generate the Code (Your output):
+
+TypeScript Types (types.ts):
+- Import PortableTextBlock from @portabletext/types
+- Define PortableTextContent as PortableTextBlock[]
+- Create interfaces using PortableTextContent for text fields
+- Image fields should have asset.url structure
+- Include proper Link interface with externalUrl and internalLink
+
+Smart GROQ Query (query.ts):
+- CRITICAL: Check schema structure first - use internationalized arrays if needed
+- For internationalized schemas: `slug[0].value.current == $slug` 
+- For simple schemas: `slug.current == $slug`
+- Project fields directly without over-expansion for internationalized arrays
+- NO JavaScript template literals (${}) - pure GROQ only
+- Test queries with debug scripts before generating components
+
+React Component (component.tsx):
+- DETECT schema structure: internationalized arrays vs PortableText
+- For internationalized arrays: create getInternationalizedString() helper with unknown type
+- For PortableText: create toPlainText() and use PortableText component
+- Handle both data structures gracefully with appropriate helpers
+- CRITICAL: Filter out null values from arrays: `data?.array?.filter(item => item !== null)`
+- CRITICAL: Use proper type guards and unknown type instead of any
+- Include 'use client' directive at the top
+- Use proper fallback values for missing data
+- Use index-based keys for arrays without _key properties
+
+Next.js Page Route (page.tsx):
+- CRITICAL: Use Next.js 15+ async params: `params: Promise<{{ slug: string }}>`
+- CRITICAL: Await params: `const {{ slug }} = await params;`
+- Import from absolute paths: '@/sanity/lib/client'
+- Handle notFound() case properly
+- Use proper error handling for data fetching
+
+OUTPUT FORMAT:
+Provide exactly four code blocks in this format:
+
+// FILEPATH: types.ts
 ```typescript
-{type_definition_with_name}
+import {{ PortableTextBlock }} from '@portabletext/types';
+
+export type PortableTextContent = PortableTextBlock[];
+
+// Your complete types here...
 ```
 
-**INPUT 2: The Visual Design.**
-An image of the Figma design is being provided. This is the visual target. You must replicate it perfectly.
+// FILEPATH: query.ts  
+```typescript
+import {{ groq }} from 'next-sanity';
 
-**YOUR TASK: Generate a single React component file.**
-- Component Name: Name the component based on the TypeScript type name.
-- Props: The component must accept a single prop: data, which is typed with the interface provided above.
-- No Static Content: Do not hardcode any text (e.g., "Welcome to our site"). Instead, use the corresponding field from the data prop (e.g., {{data.title}}). Every visible piece of content must come from the data prop.
-- Styling: Use Tailwind CSS exclusively for all styling. The result must be responsive and visually identical to the image.
-- Data Rendering:
-  - Use <Image> from next/image to render fields of type SanityImage. Assume a urlFor helper exists.
-  - Use <PortableText> from @portabletext/react to render fields of type PortableTextBlock[].
-  - Render all other fields from the data prop in the appropriate places in the design.
+export const get{component_name}DataQuery = groq`
+  {{
+    "page": *[_type == "page" && slug.current == $slug][0] {{
+      _id,
+      _type,
+      title,
+      slug {{ current }},
+      pageBuilder[] {{
+        _key,
+        _type,
+        // Add your section types here with proper GROQ syntax
+        // Example: _type == "herosection" => {{
+        //   headline,
+        //   image->{{ asset->{{url, altText}} }}
+        // }}
+      }}
+    }},
+    "siteSettings": *[_type == "siteSettings"][0] {{
+      siteName,
+      siteDescription
+    }}
+  }}
+`;
+```
 
-**OUTPUT FORMAT:**
-Provide the response as a single, complete markdown code block.
-```tsx
 // FILEPATH: component.tsx
-// ... code for React component ...
+```tsx
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import type {{ /* your types */ }} from './types';
+
+// Helper function to extract string from internationalized array or PortableText
+const getInternationalizedString = (data: unknown): string => {{
+  if (!data) return "";
+  
+  // Handle internationalized array
+  if (Array.isArray(data) && data.length > 0) {{
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem !== null && 'value' in firstItem) {{
+      const typedItem = firstItem as {{ value?: string }};
+      return typedItem.value || "";
+    }}
+  }}
+  
+  // Handle simple string
+  if (typeof data === 'string') {{
+    return data;
+  }}
+  
+  return "";
+}};
+
+// CRITICAL: Always filter null values from arrays
+// Example: data?.linkColumns?.filter(column => column !== null)?.map(...)
+
+// Your component code here...
 ```
+
+// FILEPATH: page.tsx
+```tsx
+import {{ client }} from '@/sanity/lib/client';
+import {{ get{component_name}DataQuery }} from '@/components/generated/{component_name}/query';
+import {component_name} from '@/components/generated/{component_name}/component';
+import {{ notFound }} from 'next/navigation';
+import type {{ {component_name}Data }} from '@/components/generated/{component_name}/types';
+
+interface PageProps {{
+  params: Promise<{{ slug: string }>>;
+}}
+
+export default async function {component_name}Page({{ params }}: PageProps) {{
+  const {{ slug }} = await params; // CRITICAL: await params in Next.js 15+
+  
+  const data: {component_name}Data | null = await client.fetch(get{component_name}DataQuery, {{ slug }});
+  
+  if (!data || !data.page) {{
+    notFound();
+  }}
+  
+  return <{component_name} data={{data}} />;
+}}
+```
+
+CRITICAL REQUIREMENTS:
+1. GROQ queries must use pure GROQ syntax - NO JavaScript template literals (${{variables}})
+2. Next.js 15+ requires: `params: Promise<{{ slug: string }}>` and `await params`
+3. Configure next.config.ts with Sanity CDN domain
+4. Install required dependencies: @portabletext/react @portabletext/types
+5. Use proper PortableText rendering throughout
+6. Handle missing data gracefully with fallbacks
+7. Use proper TypeScript types
+8. Test all generated queries for syntax errors
 """
 
 
-def call_gemini_api_for_ui(prompt: str, image: Image.Image):
-    """Calls the Gemini API to generate UI code based on prompt and image."""
-    print_info("Calling Gemini API for UI generation. This may take a moment...")
-    api_key = os.getenv("GEMINI_API_KEY")  # Match your .env file
+def call_gemini_api(prompt: str, image: Image.Image):
+    print_info("Calling Gemini API. This may take a moment...")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print_error("GEMINI_API_KEY not found.")
+        print_error("GEMINI_API_KEY not found in environment variables.")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     try:
         response = model.generate_content(
-            [prompt, image], generation_config={"temperature": 0.2}
+            [prompt, image], generation_config={"temperature": 0.1}
         )
         print_success("Gemini API call successful.")
+
+        # Save the response for debugging
+        with open("ai_response_debug.txt", "w", encoding="utf-8") as f:
+            f.write(response.text)
+        print_info("AI response saved to ai_response_debug.txt for debugging")
+
         return response.text
     except Exception as e:
-        if "429" in str(e) and "quota" in str(e):
-            print_info("⚠️ Gemini API quota exceeded. Using demo component for testing.")
-            return "DEMO_COMPONENT_FOR_TESTING"
-        else:
-            print_error(f"Error calling Gemini API: {e}")
+        print_error(f"Error calling Gemini API: {e}")
 
 
-def parse_ai_response_for_component(response_text: str) -> str:
-    """Extracts the component code from the AI response markdown block."""
-    print_info("Analyzing AI response...")
+def validate_groq_syntax(content: str) -> tuple[bool, str]:
+    """Validate GROQ query for common syntax errors."""
+    errors = []
+    
+    # Check for JavaScript template literals in GROQ
+    if "${" in content and "groq`" in content:
+        errors.append("❌ Found JavaScript template literals (${}) in GROQ query - use pure GROQ syntax only")
+    
+    # Check for malformed image projections
+    if "asset->url" in content and "asset->{" not in content:
+        errors.append("❌ Found 'asset->url' - should be 'asset->{url}'")
+    
+    # Check for missing closing braces
+    open_braces = content.count("{")
+    close_braces = content.count("}")
+    if open_braces != close_braces:
+        errors.append(f"❌ Mismatched braces: {open_braces} opening, {close_braces} closing")
+    
+    # Check for slug syntax
+    if "slug.current ==" in content and "internationalizedArray" in content:
+        errors.append("❌ Found 'slug.current' but schema uses internationalized arrays - use 'slug[0].value.current'")
+    
+    # Check for over-projection in internationalized arrays
+    if "slug[].value.current" in content:
+        errors.append("❌ Found 'slug[].value.current' - should be 'slug[0].value.current' for filtering")
+    
+    return len(errors) == 0, "\n".join(errors)
 
-    # Debug: Save the response to see what we got
-    with open("ai_response_debug.txt", "w", encoding="utf-8") as f:
-        f.write(response_text)
-    print_info("AI response saved to 'ai_response_debug.txt' for debugging")
 
-    # Try multiple patterns to find the component code
-    patterns = [
-        r"```tsx\s*\n\s*//\s*FILEPATH:\s*component\.tsx\n([\s\S]*?)\n```",  # Original pattern
-        r"```tsx\s*\n([\s\S]*?)\n```",  # Any tsx code block
-        r"```typescript\s*\n([\s\S]*?)\n```",  # TypeScript code block
-        r"```jsx\s*\n([\s\S]*?)\n```",  # JSX code block
-        r"```react\s*\n([\s\S]*?)\n```",  # React code block
-        r"```\s*\n([\s\S]*?)\n```",  # Any code block
-    ]
+def validate_nextjs_params(content: str) -> tuple[bool, str]:
+    """Validate Next.js page for proper params handling."""
+    errors = []
+    
+    # Check for Next.js 15+ params
+    if "params:" in content and "Promise<" not in content:
+        errors.append("❌ Found params without Promise<> - use 'params: Promise<{slug: string}>'")
+    
+    if "const { slug } = params;" in content:
+        errors.append("❌ Found synchronous params access - use 'const {slug} = await params;'")
+    
+    return len(errors) == 0, "\n".join(errors)
 
-    for i, pattern in enumerate(patterns):
-        match = re.search(pattern, response_text, re.MULTILINE | re.IGNORECASE)
-        if match:
-            print_success(f"Found component code using pattern {i + 1}")
-            component_code = match.group(1).strip()
 
-            # Basic validation - ensure it looks like a React component
-            if (
-                "export default" in component_code
-                or "function " in component_code
-                or "const " in component_code
-            ):
-                return component_code
+def parse_and_create_files(
+    response_text: str, component_name: str, component_dir: Path, page_dir: Path
+):
+    if not response_text:
+        print_error("Cannot create files from empty AI response.")
 
-    # If no patterns work, create a basic template
-    print_info(
-        "Could not parse AI response. Creating a basic template component. "
-        "Check 'ai_response_debug.txt' to see the actual AI response."
+    print_step(f"Creating files for '{component_name}'")
+    component_dir.mkdir(parents=True, exist_ok=True)
+    page_dir.mkdir(parents=True, exist_ok=True)
+
+    file_pattern = re.compile(
+        r"//\s*FILEPATH:\s*([^\n]+)\n```\w*\n([\s\S]*?)\n```", re.MULTILINE
     )
 
-    # Return a basic template that the user can modify
-    return """'use client'
+    files_created = {}
+    validation_errors = []
+    
+    for match in file_pattern.finditer(response_text):
+        filepath = match.group(1).strip()
+        content = match.group(2).strip()
 
-import React from 'react'
-import Image from 'next/image'
-import { PortableText } from '@portabletext/react'
+        # Extract just the filename from the full path
+        filename = filepath.split("/")[-1] if "/" in filepath else filepath
 
-interface Props {
-  data: any // Replace with your actual type
+        # Validate specific file types
+        if filename == "query.ts":
+            is_valid, error_msg = validate_groq_syntax(content)
+            if not is_valid:
+                validation_errors.append(f"GROQ Validation in {filename}:\n{error_msg}")
+        
+        if filename == "page.tsx":
+            is_valid, error_msg = validate_nextjs_params(content)
+            if not is_valid:
+                validation_errors.append(f"Next.js Validation in {filename}:\n{error_msg}")
+
+        if filename == "page.tsx":
+            file_path = page_dir / filename
+        else:
+            file_path = component_dir / filename
+
+        file_path.write_text(content, encoding="utf-8")
+        files_created[filename] = file_path
+        print_success(f"Created file: {file_path}")
+
+    # Report validation errors but don't stop - let user fix them
+    if validation_errors:
+        print_info("⚠️  Validation warnings found:")
+        for error in validation_errors:
+            print_info(error)
+        print_info("Files created but may need manual fixes.")
+
+    if len(files_created) < 4:
+        print_error(
+            f"Expected 4 code blocks, but only found {len(files_created)}. Check the AI response."
+        )
+
+
+def create_schema_debug_script():
+    """Create a debug script to analyze schema structure."""
+    debug_script = """
+const { createClient } = require('next-sanity');
+require('dotenv').config({ path: '.env.local' });
+
+const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  apiVersion: '2023-03-01',
+  useCdn: false,
+});
+
+async function analyzeSchema() {
+  console.log('🔍 Analyzing schema structure...');
+  
+  // Check a sample page to understand structure
+  const samplePage = await client.fetch(`*[_type == "page"][0] {
+    title,
+    slug,
+    "titleType": title._type,
+    "slugType": slug._type
+  }`);
+  
+  console.log('📄 Sample page structure:');
+  console.log(JSON.stringify(samplePage, null, 2));
+  
+  // Determine if using internationalized arrays
+  const isInternationalized = samplePage?.title?._type || 
+    (Array.isArray(samplePage?.title) && samplePage.title[0]?._type?.includes('internationalized'));
+  
+  console.log('\\n🌐 Schema type:', isInternationalized ? 'INTERNATIONALIZED ARRAYS' : 'STANDARD FIELDS');
+  
+  if (isInternationalized) {
+    console.log('✅ Use: slug[0].value.current for filtering');
+    console.log('✅ Use: getInternationalizedString() helpers in components');
+  } else {
+    console.log('✅ Use: slug.current for filtering');
+    console.log('✅ Use: PortableText components for rich text');
+  }
 }
 
-export default function GeneratedComponent({ data }: Props) {
-  return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Generated Component</h2>
-      <p className="text-gray-600">
-        This is a basic template. Check ai_response_debug.txt to see the AI response
-        and manually edit this component to match your Figma design.
-      </p>
-      <pre className="mt-4 p-4 bg-gray-100 rounded text-sm overflow-auto">
-        {JSON.stringify(data, null, 2)}
-      </pre>
-    </div>
-  )
-}"""
+analyzeSchema().catch(console.error);
+"""
+    
+    with open("analyze-schema.js", "w", encoding="utf-8") as f:
+        f.write(debug_script.strip())
+    
+    print_info("Created analyze-schema.js - run this to understand your schema structure")
 
 
-# --- Main Orchestration ---
+def setup_project_dependencies():
+    """Ensure project has required dependencies and configuration."""
+    print_step("Setting up project dependencies and configuration")
+
+    # Check if required packages are installed
+    package_json_path = Path("package.json")
+    if package_json_path.exists():
+        try:
+            with open(package_json_path, "r") as f:
+                package_data = json.load(f)
+
+            dependencies = package_data.get("dependencies", {})
+            dev_dependencies = package_data.get("devDependencies", {})
+            all_deps = {**dependencies, **dev_dependencies}
+
+            missing_deps = []
+            required_deps = ["@portabletext/react", "@portabletext/types"]
+
+            for dep in required_deps:
+                if dep not in all_deps:
+                    missing_deps.append(dep)
+
+            if missing_deps:
+                print_info(
+                    f"Installing missing dependencies: {', '.join(missing_deps)}"
+                )
+                run_command(
+                    ["npm", "install"] + missing_deps,
+                    step_description="Install PortableText dependencies",
+                )
+            else:
+                print_success("All required dependencies are already installed.")
+
+        except Exception as e:
+            print_info(f"Could not read package.json: {e}")
+
+    # Configure next.config.ts for Sanity images
+    next_config_path = Path("next.config.ts")
+    if next_config_path.exists():
+        try:
+            with open(next_config_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            if "cdn.sanity.io" not in content:
+                print_info("Updating next.config.ts to allow Sanity CDN images...")
+
+                # Simple regex replacement to add Sanity image config
+                if "images:" in content:
+                    print_info(
+                        "Images config already exists, please manually add Sanity CDN domain."
+                    )
+                else:
+                    # Add images config
+                    content = content.replace(
+                        "const nextConfig: NextConfig = {",
+                        """const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+        port: "",
+        pathname: "/images/**",
+      },
+    ],
+  },""",
+                    )
+
+                    with open(next_config_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+                    print_success(
+                        "Updated next.config.ts with Sanity CDN configuration."
+                    )
+            else:
+                print_success("next.config.ts already configured for Sanity images.")
+
+        except Exception as e:
+            print_info(f"Could not update next.config.ts: {e}")
+            print_info(
+                "Please manually add Sanity CDN domain to your Next.js image configuration."
+            )
+
+
 def main():
-    """Main function that orchestrates the entire UI generation process."""
     load_dotenv()
-
-    # Step 1: Generate types and let the user select a schema
-    types_content = generate_and_read_sanity_types()
-    selected_schema = parse_types_and_select_schema(types_content)
-    schema_name_pascal = selected_schema["name"]
-
-    # Step 2: Generate the GROQ query from the selected schema's type
-    groq_query_code = generate_groq_from_type(
-        schema_name_pascal, selected_schema["definition"]
-    )
-
-    # Step 3: Let the user select the corresponding Figma design
     figma_api_key = os.getenv("FIGMA_API_KEY")
-    figma_file_id = os.getenv("FIGMA_FILE_KEY")  # Match your .env file
+    figma_file_id = os.getenv("FIGMA_FILE_KEY")
+
     if not figma_api_key or not figma_file_id:
         print_error("FIGMA_API_KEY and FIGMA_FILE_KEY must be set in your .env file.")
 
+    # 0. Setup project dependencies and configuration
+    setup_project_dependencies()
+    
+    # 0.5. Create schema analysis tool
+    create_schema_debug_script()
+
+    # 1. Analyze all available Sanity schemas
+    all_schemas = get_all_sanity_schemas_as_json()
+    all_schemas_json_str = json.dumps(all_schemas, indent=2)
+
+    # 2. User selects a Figma design to build
     figma_data = get_figma_document_data(figma_api_key, figma_file_id)
     selected_frame = select_figma_frame(figma_data)
-    figma_image = export_figma_frame_as_image(
-        selected_frame["id"], figma_api_key, figma_file_id
-    )
 
-    # Step 4: Generate the UI component using AI
-    # We pass the full type definition to the AI so it knows what data to expect
-    type_definition_for_prompt = (
-        f"export type {schema_name_pascal} = {selected_schema['definition']};"
-    )
-    ui_prompt = generate_ui_prompt(type_definition_for_prompt)
-    ai_ui_response = call_gemini_api_for_ui(ui_prompt, figma_image)
-    react_component_code = parse_ai_response_for_component(ai_ui_response)
+    component_name = format_name_to_pascal_case(selected_frame["name"])
+    node_id = selected_frame["id"]
 
-    # Step 5: Create all the generated files in an organized folder
-    print_step("Creating Final Component Module")
-    output_dir = Path(f"src/components/generated/{schema_name_pascal}")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # 3. Export the visual blueprint
+    figma_image = export_figma_frame_as_image(node_id, figma_api_key, figma_file_id)
 
-    # Create the types file, including necessary imports
-    (output_dir / "types.ts").write_text(
-        f"import type {{ Image as SanityImage, PortableTextBlock }} from 'sanity';\n\n{type_definition_for_prompt}"
-    )
-    print_success(f"Created file: {output_dir / 'types.ts'}")
+    # 4. Generate the AI prompt and get all code artifacts
+    prompt = generate_ai_prompt(all_schemas_json_str, component_name)
+    ai_response = call_gemini_api(prompt, figma_image)
+    if not ai_response:
+        print_error("Failed to get a response from the AI. Halting.")
 
-    # Create the query file
-    (output_dir / "query.ts").write_text(groq_query_code)
-    print_success(f"Created file: {output_dir / 'query.ts'}")
+    # 5. Create all files, including the new page route
+    component_dir = Path(f"src/components/generated/{component_name}")
+    # Create a dynamic route based on the component name, e.g., /blog/[slug]
+    page_route_name = re.sub(
+        r"(?<!^)(?=[A-Z])", "-", component_name
+    ).lower()  # BlogPost -> blog-post
+    page_dir = Path(
+        f"src/app/{page_route_name}s/[slug]"
+    )  # -> src/app/blog-posts/[slug]
 
-    # Create the component file
-    (output_dir / "component.tsx").write_text(react_component_code)
-    print_success(f"Created file: {output_dir / 'component.tsx'}")
+    parse_and_create_files(ai_response, component_name, component_dir, page_dir)
 
-    print("\n🚀 Hybrid code generation complete!")
-    print(f"   A fully dynamic component module has been created in: {output_dir}")
+    print("\n🚀 Intelligent code generation complete!")
+    print(f"   - Component files are in: {component_dir}")
+    print(f"   - A new page route is at: {page_dir}")
     print("\nNext Steps:")
     print(
-        f"1. **Create a page route** in `src/app/` to use your new `{schema_name_pascal}` component."
+        f"1. **Review the generated code**, especially the query in `{component_dir / 'query.ts'}` to see how the AI mapped the design to your schemas."
     )
     print(
-        f"2. In that page, import and use the `get{schema_name_pascal}BySlugQuery` to fetch data."
+        f"2. **Go to your Sanity Studio**, create content for the relevant schema(s), and publish."
     )
-    print(f"3. Pass the fetched data to your new component.")
     print(
-        f"4. Go to your Sanity Studio, create content for the '{schema_name_pascal}' type, and publish it."
+        f"3. **Start your app** (`npm run dev`) and navigate to the new route (e.g., `http://localhost:3000/{page_route_name}s/your-slug`)."
+    )
+    print(
+        "\n💡 **Tip**: The script has automatically configured your project for PortableText and Sanity images!"
     )
 
 

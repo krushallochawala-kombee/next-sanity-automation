@@ -1,0 +1,1197 @@
+{
+  "Socialproofsection": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"socialproofsection\"",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "logos",
+        "type": "Array<{\n    _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "SiteSettings": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"siteSettings\"",
+        "optional": false
+      },
+      {
+        "name": "siteName",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "siteDescription",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "header",
+        "type": "{\n    _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": true
+  },
+  "Quotesection": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"quotesection\"",
+        "optional": false
+      },
+      {
+        "name": "quote",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "authorName",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "authorTitle",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "authorImage",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Metricssection": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"metricssection\"",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "metrics",
+        "type": "Array<{\n    value?: Array<{\n      _key: string",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "Array<{\n      _key: string",
+        "optional": true
+      },
+      {
+        "name": "icon",
+        "type": "Array<{\n      _key: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"metricitem\"",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "Metricitem": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"metricitem\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "icon",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": true
+  },
+  "Imagewithalt": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"imagewithalt\"",
+        "optional": false
+      },
+      {
+        "name": "image",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "altText",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "caption",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Herosection": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"herosection\"",
+        "optional": false
+      },
+      {
+        "name": "headline",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "tagline",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "image",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "ctaButtons",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Header": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"header\"",
+        "optional": false
+      },
+      {
+        "name": "logo",
+        "type": "{\n    _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": true
+  },
+  "Footerlinkscolumn": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"footerlinkscolumn\"",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "links",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Footerlink": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"footerlink\"",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "link",
+        "type": "Link",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Link": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"link\"",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "externalUrl",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "internalLink",
+        "type": "{\n    _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "Footer": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"footer\"",
+        "optional": false
+      },
+      {
+        "name": "linkColumns",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "logo",
+        "type": "{\n    _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": true
+  },
+  "Featuressection": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"featuressection\"",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "features",
+        "type": "Array<{\n    _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "Feature": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"feature\"",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "icon",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": true
+  },
+  "Ctasection": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"ctasection\"",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "image",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "button",
+        "type": "Button",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Companylogo": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"companylogo\"",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "logo",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "altText",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": true
+  },
+  "Button": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"button\"",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "link",
+        "type": "{\n    internalLink?: {\n      _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "Page": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"page\"",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "slug",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "pageBuilder",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "_key",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "seo",
+        "type": "Seo",
+        "optional": true
+      }
+    ],
+    "is_document": true
+  },
+  "Seo": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"seo\"",
+        "optional": false
+      },
+      {
+        "name": "metaTitle",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "metaDescription",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "ogImage",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "ogTitle",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "ogDescription",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "keywords",
+        "type": "Array<Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "noIndex",
+        "type": "boolean",
+        "optional": true
+      },
+      {
+        "name": "canonicalUrl",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Author": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"author\"",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "slug",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "image",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      },
+      {
+        "name": "bio",
+        "type": "Array<{\n    _key: string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "InternationalizedArraySlugValue": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"internationalizedArraySlugValue\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "Slug",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "InternationalizedArrayFileValue": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"internationalizedArrayFileValue\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "{\n    asset?: {\n      _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "InternationalizedArrayUrlValue": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"internationalizedArrayUrlValue\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "InternationalizedArrayImageValue": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"internationalizedArrayImageValue\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "{\n    asset?: {\n      _ref: string",
+        "optional": true
+      },
+      {
+        "name": "_type",
+        "type": "\"reference\"",
+        "optional": false
+      }
+    ],
+    "is_document": false
+  },
+  "InternationalizedArrayTextValue": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"internationalizedArrayTextValue\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "InternationalizedArrayStringValue": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"internationalizedArrayStringValue\"",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityImagePaletteSwatch": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imagePaletteSwatch\"",
+        "optional": false
+      },
+      {
+        "name": "background",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "foreground",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "population",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityImagePalette": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imagePalette\"",
+        "optional": false
+      },
+      {
+        "name": "darkMuted",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      },
+      {
+        "name": "lightVibrant",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      },
+      {
+        "name": "darkVibrant",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      },
+      {
+        "name": "vibrant",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      },
+      {
+        "name": "dominant",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      },
+      {
+        "name": "lightMuted",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      },
+      {
+        "name": "muted",
+        "type": "SanityImagePaletteSwatch",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityImageDimensions": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imageDimensions\"",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "aspectRatio",
+        "type": "number",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityImageHotspot": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imageHotspot\"",
+        "optional": false
+      },
+      {
+        "name": "x",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "y",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityImageCrop": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imageCrop\"",
+        "optional": false
+      },
+      {
+        "name": "top",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "bottom",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "left",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "right",
+        "type": "number",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityFileAsset": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.fileAsset\"",
+        "optional": false
+      },
+      {
+        "name": "originalFilename",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "altText",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "sha1hash",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "extension",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "mimeType",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "size",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "assetId",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "uploadId",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "source",
+        "type": "SanityAssetSourceData",
+        "optional": true
+      }
+    ],
+    "is_document": true
+  },
+  "SanityImageAsset": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imageAsset\"",
+        "optional": false
+      },
+      {
+        "name": "originalFilename",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "altText",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "sha1hash",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "extension",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "mimeType",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "size",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "assetId",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "uploadId",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "metadata",
+        "type": "SanityImageMetadata",
+        "optional": true
+      },
+      {
+        "name": "source",
+        "type": "SanityAssetSourceData",
+        "optional": true
+      }
+    ],
+    "is_document": true
+  },
+  "SanityImageMetadata": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.imageMetadata\"",
+        "optional": false
+      },
+      {
+        "name": "location",
+        "type": "Geopoint",
+        "optional": true
+      },
+      {
+        "name": "dimensions",
+        "type": "SanityImageDimensions",
+        "optional": true
+      },
+      {
+        "name": "palette",
+        "type": "SanityImagePalette",
+        "optional": true
+      },
+      {
+        "name": "lqip",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "blurHash",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "hasAlpha",
+        "type": "boolean",
+        "optional": true
+      },
+      {
+        "name": "isOpaque",
+        "type": "boolean",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Geopoint": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"geopoint\"",
+        "optional": false
+      },
+      {
+        "name": "lat",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "lng",
+        "type": "number",
+        "optional": true
+      },
+      {
+        "name": "alt",
+        "type": "number",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "Slug": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"slug\"",
+        "optional": false
+      },
+      {
+        "name": "current",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "source",
+        "type": "string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  },
+  "SanityAssetSourceData": {
+    "fields": [
+      {
+        "name": "_type",
+        "type": "\"sanity.assetSourceData\"",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "optional": true
+      }
+    ],
+    "is_document": false
+  }
+}

@@ -1,0 +1,776 @@
+// FILEPATH: types.ts
+```typescript
+import type { SanityImageCrop, SanityImageHotspot } from '@sanity/image-url/lib/types/types';
+import { PortableTextBlock } from '@portabletext/types';
+
+// Helper type for Portable Text fields
+export type PortableTextContent = PortableTextBlock[];
+
+// Represents the projected image asset data from Sanity
+export interface SanityAssetData {
+  url: string;
+  altText?: string; // From SanityImageAsset.altText
+  caption?: string; // From SanityImageAsset.description (often used for caption)
+}
+
+// Schema: Imagewithalt
+export interface ImageWithAlt {
+  _type: 'imagewithalt';
+  asset?: SanityAssetData; // The actual image asset data (from Imagewithalt.image.asset)
+  altText?: PortableTextContent; // Optional override/supplemental alt text (Portable Text from Imagewithalt)
+  caption?: PortableTextContent; // Optional override/supplemental caption (Portable Text from Imagewithalt)
+}
+
+// Schema: Companylogo
+export interface CompanyLogo {
+  _type: 'companylogo';
+  name?: PortableTextContent;
+  logo?: SanityAssetData; // The actual logo asset data (from Companylogo.logo.asset)
+  altText?: PortableTextContent; // Optional override/supplemental alt text (Portable Text from Companylogo)
+  url?: PortableTextContent; // Portable Text, but will be treated as string for URL
+}
+
+// Schema: Link
+export interface Link {
+  _type: 'link';
+  label?: PortableTextContent;
+  externalUrl?: PortableTextContent; // Portable Text, but will be treated as string for URL
+  internalLink?: {
+    _ref: string;
+    _type: 'reference';
+    slug?: { current: string }; // Expanded slug for internal links
+  };
+}
+
+// Schema: Button
+export interface Button {
+  _type: 'button';
+  label?: PortableTextContent;
+  link?: Link; // Reference to Link
+}
+
+// Schema: Feature
+export interface Feature {
+  _type: 'feature';
+  title?: PortableTextContent;
+  description?: PortableTextContent;
+  icon?: ImageWithAlt; // Reference to ImageWithAlt for the icon
+}
+
+// Schema: Metricitem
+export interface MetricItem {
+  _type: 'metricitem';
+  value?: PortableTextContent;
+  label?: PortableTextContent;
+  icon?: ImageWithAlt; // Reference to ImageWithAlt for the icon
+}
+
+// Schema: Herosection
+export interface HeroSection {
+  _type: 'herosection';
+  headline?: PortableTextContent;
+  tagline?: PortableTextContent;
+  image?: ImageWithAlt; // Reference to ImageWithAlt for the main image
+  ctaButtons?: Button[]; // Array of Button references (assuming plural for design)
+  // Custom fields based on design (not explicitly in provided schema)
+  pretitle?: PortableTextContent;
+  pretitleLink?: Link;
+}
+
+// Schema: Socialproofsection
+export interface SocialProofSection {
+  _type: 'socialproofsection';
+  title?: PortableTextContent;
+  logos?: CompanyLogo[]; // Array of CompanyLogo references
+}
+
+// Schema: Featuressection
+export interface FeaturesSection {
+  _type: 'featuressection';
+  name?: string; // String
+  title?: PortableTextContent;
+  description?: PortableTextContent;
+  features?: Feature[]; // Array of Feature references
+}
+
+// Schema: Quotesection
+export interface QuoteSection {
+  _type: 'quotesection';
+  quote?: PortableTextContent;
+  authorName?: PortableTextContent;
+  authorTitle?: PortableTextContent;
+  authorImage?: ImageWithAlt; // Reference to ImageWithAlt for the author's image
+}
+
+// Schema: Metricssection
+export interface MetricsSection {
+  _type: 'metricssection';
+  title?: PortableTextContent;
+  description?: PortableTextContent;
+  metrics?: MetricItem[]; // Array of MetricItem references
+  // Custom fields based on design (not explicitly in provided schema)
+  pretitle?: PortableTextContent;
+  image?: ImageWithAlt; // Reference to ImageWithAlt for the section image
+}
+
+// Schema: Ctasection
+export interface CtaSection {
+  _type: 'ctasection';
+  title?: PortableTextContent;
+  description?: PortableTextContent;
+  image?: ImageWithAlt; // Reference to ImageWithAlt for the section image
+  ctaButtons?: Button[]; // Array of Button references (assuming plural for design)
+}
+
+// Schema: Footerlink
+export interface FooterLink {
+  _type: 'footerlink';
+  label?: PortableTextContent;
+  link?: Link; // Reference to Link
+}
+
+// Schema: Footerlinkscolumn
+export interface FooterLinksColumn {
+  _type: 'footerlinkscolumn';
+  title?: PortableTextContent;
+  links?: FooterLink[]; // Array of FooterLink references
+}
+
+// Schema: Footer
+export interface Footer {
+  _type: 'footer';
+  linkColumns?: FooterLinksColumn[]; // Array of FooterLinksColumn references
+  logo?: CompanyLogo; // Reference to CompanyLogo
+}
+
+// Schema: Header
+export interface Header {
+  _type: 'header';
+  logo?: CompanyLogo; // Reference to CompanyLogo
+}
+
+// Schema: SiteSettings
+export interface SiteSettings {
+  _type: 'siteSettings';
+  siteName?: PortableTextContent;
+  siteDescription?: PortableTextContent;
+  header?: Header; // Reference to Header
+  footer?: Footer; // Reference to Footer
+}
+
+// Schema: Page
+export interface Page {
+  _type: 'page';
+  title?: PortableTextContent;
+  slug?: { current: string };
+  pageBuilder?: (HeroSection | SocialProofSection | FeaturesSection | QuoteSection | MetricsSection | CtaSection)[];
+}
+
+// Main type for the Desktop component, combining Page and SiteSettings
+export interface DesktopData {
+  page: Page;
+  siteSettings: SiteSettings;
+}
+```
+
+// FILEPATH: query.ts
+```typescript
+import { groq } from 'next-sanity';
+
+// Helper to extract plain text from Portable Text array
+const portableTextToPlainText = `
+  defined(0)[0].children[0].text
+`;
+
+// Helper for projecting a Sanity image asset into a URL and altText/caption
+const sanityAssetProjection = `
+  asset->{
+    url,
+    altText, // from SanityImageAsset
+    description // from SanityImageAsset, often used for caption
+  }
+`;
+
+// Helper for Imagewithalt projections (which wraps a Sanity image)
+const imageWithAltProjection = `
+  {
+    "asset": image${sanityAssetProjection}, // Project the inner image field's asset
+    altText, // Portable Text from Imagewithalt schema
+    caption // Portable Text from Imagewithalt schema
+  }
+`;
+
+// Helper for CompanyLogo projections
+const companyLogoProjection = `
+  {
+    "name": name${portableTextToPlainText},
+    "logo": logo${sanityAssetProjection}, // Project the inner logo field's asset
+    "altText": altText${portableTextToPlainText}, // Portable Text from Companylogo schema
+    "url": url${portableTextToPlainText}
+  }
+`;
+
+// Helper for Link projections
+const linkProjection = `
+  {
+    "label": label${portableTextToPlainText},
+    "externalUrl": externalUrl${portableTextToPlainText},
+    "internalLink": internalLink->slug.current
+  }
+`;
+
+// Helper for Button projections
+const buttonProjection = `
+  {
+    "label": label${portableTextToPlainText},
+    "link": link${linkProjection}
+  }
+`;
+
+export const getDesktopDataQuery = groq`
+  {
+    "page": *[_type == "page" && slug.current == $slug][0] {
+      _id,
+      _type,
+      title, // Portable Text
+      slug {
+        current
+      },
+      pageBuilder[] {
+        _key,
+        _type,
+        _type == "herosection" => {
+          headline, // Portable Text
+          tagline, // Portable Text
+          image->${imageWithAltProjection}, // Reference to Imagewithalt
+          ctaButtons[]->${buttonProjection}, // Array of Button references
+          pretitle, // Portable Text (custom field)
+          pretitleLink${linkProjection} // Link (custom field)
+        },
+        _type == "socialproofsection" => {
+          title, // Portable Text
+          logos[]->${companyLogoProjection} // Array of CompanyLogo references
+        },
+        _type == "featuressection" => {
+          title, // Portable Text
+          description, // Portable Text
+          features[]->{
+            title${portableTextToPlainText},
+            description${portableTextToPlainText},
+            icon->${imageWithAltProjection} // Reference to Imagewithalt
+          }
+        },
+        _type == "quotesection" => {
+          quote, // Portable Text
+          authorName${portableTextToPlainText},
+          authorTitle${portableTextToPlainText},
+          authorImage->${imageWithAltProjection} // Reference to Imagewithalt
+        },
+        _type == "metricssection" => {
+          title, // Portable Text
+          description, // Portable Text
+          metrics[]->{
+            value${portableTextToPlainText},
+            label${portableTextToPlainText},
+            icon->${imageWithAltProjection} // Reference to Imagewithalt
+          },
+          pretitle, // Portable Text (custom field)
+          image->${imageWithAltProjection} // Reference to Imagewithalt (custom field)
+        },
+        _type == "ctasection" => {
+          title, // Portable Text
+          description, // Portable Text
+          image->${imageWithAltProjection}, // Reference to Imagewithalt
+          ctaButtons[]->${buttonProjection} // Array of Button references
+        }
+      }
+    },
+    "siteSettings": *[_type == "siteSettings"][0] {
+      siteName${portableTextToPlainText},
+      siteDescription${portableTextToPlainText},
+      header->{
+        logo->${companyLogoProjection}
+      },
+      footer->{
+        logo->${companyLogoProjection},
+        linkColumns[]->{
+          title${portableTextToPlainText},
+          links[]->{
+            label${portableTextToPlainText},
+            link${linkProjection}
+          }
+        }
+      }
+    }
+  }
+`;
+```
+
+// FILEPATH: component.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { PortableText } from '@portabletext/react'; // Assuming @portabletext/react is installed
+import type { DesktopData, PortableTextContent, HeroSection, SocialProofSection, FeaturesSection, QuoteSection, MetricsSection, CtaSection, Button, Link as LinkType, CompanyLogo, ImageWithAlt } from './types';
+
+// Helper function to extract plain text from Portable Text array
+const toPlainText = (blocks: PortableTextContent | undefined): string => {
+  if (!blocks || blocks.length === 0) return '';
+  return blocks.map(block => {
+    if (block._type === 'block' && block.children) {
+      return block.children.map(child => child.text).join('');
+    }
+    return '';
+  }).join('\n');
+};
+
+// Portable Text Components (minimal for this design)
+const portableTextComponents = {
+  block: {
+    normal: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+    h1: ({ children }: { children: React.ReactNode }) => <h1>{children}</h1>,
+    h2: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+    h3: ({ children }: { children: React.ReactNode }) => <h3>{children}</h3>,
+    h4: ({ children }: { children: React.ReactNode }) => <h4>{children}</h4>,
+    h5: ({ children }: { children: React.ReactNode }) => <h5>{children}</h5>,
+    h6: ({ children }: { children: React.ReactNode }) => <h6>{children}</h6>,
+  },
+  marks: {
+    link: ({ children, value }: { children: React.ReactNode, value: { href: string } }) => {
+      const rel = value.href.startsWith('/') ? undefined : 'noreferrer noopener';
+      return (
+        <a href={value.href} rel={rel} className="text-blue-600 hover:underline">
+          {children}
+        </a>
+      );
+    },
+  },
+};
+
+interface CustomButtonProps {
+  button: Button;
+  variant: 'primary' | 'secondary';
+  icon?: React.ReactNode;
+}
+
+const CustomButton: React.FC<CustomButtonProps> = ({ button, variant, icon }) => {
+  if (!button || !button.label) return null;
+
+  const label = toPlainText(button.label);
+  const href = button.link?.externalUrl ? toPlainText(button.link.externalUrl) : (button.link?.internalLink || '#');
+
+  const baseClasses = 'inline-flex items-center justify-center px-6 py-3 border text-base font-medium rounded-lg shadow-sm transition-colors duration-200';
+  const primaryClasses = 'bg-indigo-600 text-white border-transparent hover:bg-indigo-700';
+  const secondaryClasses = 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+
+  return (
+    <Link href={href} className={`${baseClasses} ${variant === 'primary' ? primaryClasses : secondaryClasses}`}>
+      {icon && <span className="mr-2">{icon}</span>}
+      {label}
+    </Link>
+  );
+};
+
+const HeroSectionComponent: React.FC<{ data: HeroSection }> = ({ data }) => (
+  <section className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8">
+    <div className="mx-auto max-w-2xl text-center">
+      {data.pretitle && data.pretitleLink && (
+        <Link href={data.pretitleLink.externalUrl ? toPlainText(data.pretitleLink.externalUrl) : (data.pretitleLink.internalLink || '#')} className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-4">
+          {toPlainText(data.pretitle)} <span aria-hidden="true" className="ml-1">&rarr;</span>
+        </Link>
+      )}
+      <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        <PortableText value={data.headline} components={portableTextComponents} />
+      </h1>
+      <p className="mt-6 text-lg leading-8 text-gray-600">
+        <PortableText value={data.tagline} components={portableTextComponents} />
+      </p>
+      <div className="mt-10 flex items-center justify-center gap-x-6">
+        {data.ctaButtons && data.ctaButtons[0] && (
+          <CustomButton
+            button={data.ctaButtons[0]}
+            variant="secondary"
+            icon={
+              <svg className="h-5 w-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.024-.983a1.125 1.125 0 0 1 0 1.966l-5.604 3.113a1.125 1.125 0 0 1-1.726-.986V9.866a1.125 1.125 0 0 1 1.726-.986l5.604 3.113Z" clipRule="evenodd" />
+              </svg>
+            }
+          />
+        )}
+        {data.ctaButtons && data.ctaButtons[1] && (
+          <CustomButton button={data.ctaButtons[1]} variant="primary" />
+        )}
+      </div>
+    </div>
+    {data.image?.asset?.url && (
+      <div className="mt-16 flow-root sm:mt-24">
+        <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
+          <Image
+            src={data.image.asset.url}
+            alt={data.image.altText ? toPlainText(data.image.altText) : data.image.asset.altText || 'Hero image'}
+            width={2432}
+            height={1442}
+            className="rounded-md shadow-2xl ring-1 ring-gray-900/10"
+          />
+        </div>
+      </div>
+    )}
+  </section>
+);
+
+const SocialProofSectionComponent: React.FC<{ data: SocialProofSection }> = ({ data }) => (
+  <section className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <h2 className="text-center text-lg font-semibold leading-8 text-gray-900">
+        <PortableText value={data.title} components={portableTextComponents} />
+      </h2>
+      <div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:max-w-none lg:grid-cols-5">
+        {data.logos?.map((logo, index) => (
+          logo.logo?.url && (
+            <Image
+              key={index}
+              className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
+              src={logo.logo.url}
+              alt={logo.altText ? toPlainText(logo.altText) : logo.logo.altText || toPlainText(logo.name) || 'Company logo'}
+              width={158}
+              height={48}
+            />
+          )
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const FeaturesSectionComponent: React.FC<{ data: FeaturesSection }> = ({ data }) => (
+  <section className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl lg:text-center">
+        <h2 className="text-base font-semibold leading-7 text-indigo-600">Features</h2>
+        <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <PortableText value={data.title} components={portableTextComponents} />
+        </p>
+        <p className="mt-6 text-lg leading-8 text-gray-600">
+          <PortableText value={data.description} components={portableTextComponents} />
+        </p>
+      </div>
+      <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+        <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3 lg:gap-y-16">
+          {data.features?.map((feature, index) => (
+            <div key={index} className="relative pl-16">
+              <dt className="text-base font-semibold leading-7 text-gray-900">
+                <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                  {feature.icon?.asset?.url && (
+                    <Image
+                      src={feature.icon.asset.url}
+                      alt={feature.icon.altText ? toPlainText(feature.icon.altText) : feature.icon.asset.altText || toPlainText(feature.title) || 'Feature icon'}
+                      width={24}
+                      height={24}
+                      className="h-6 w-6 text-white"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+                {toPlainText(feature.title)}
+              </dt>
+              <dd className="mt-2 text-base leading-7 text-gray-600">
+                {toPlainText(feature.description)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+);
+
+const QuoteSectionComponent: React.FC<{ data: QuoteSection }> = ({ data }) => (
+  <section className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl text-center">
+        {/* Sisyphus logo is hardcoded as it's a specific company logo not part of QuoteSection schema */}
+        <Image
+          className="mx-auto h-12"
+          src="/logo-sisyphus.svg"
+          alt="Sisyphus"
+          width={100}
+          height={48}
+        />
+        <figure className="mt-10">
+          <blockquote className="text-center text-xl font-semibold leading-8 text-gray-900 sm:text-2xl sm:leading-9">
+            <p>
+              <PortableText value={data.quote} components={portableTextComponents} />
+            </p>
+          </blockquote>
+          <figcaption className="mt-10">
+            {data.authorImage?.asset?.url && (
+              <Image
+                className="mx-auto h-10 w-10 rounded-full"
+                src={data.authorImage.asset.url}
+                alt={data.authorImage.altText ? toPlainText(data.authorImage.altText) : data.authorImage.asset.altText || toPlainText(data.authorName) || 'Author image'}
+                width={40}
+                height={40}
+              />
+            )}
+            <div className="mt-4 flex items-center justify-center space-x-3 text-base">
+              <div className="font-semibold text-gray-900">{toPlainText(data.authorName)}</div>
+              <svg viewBox="0 0 2 2" width={3} height={3} aria-hidden="true" className="fill-gray-900">
+                <circle cx={1} cy={1} r={1} />
+              </svg>
+              <div className="text-gray-600">{toPlainText(data.authorTitle)}</div>
+            </div>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+);
+
+const MetricsSectionComponent: React.FC<{ data: MetricsSection }> = ({ data }) => (
+  <section className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto grid max-w-2xl grid-cols-1 items-start gap-x-8 gap-y-16 sm:gap-y-24 lg:mx-0 lg:max-w-none lg:grid-cols-2">
+        <div className="lg:pr-4">
+          <div className="relative overflow-hidden rounded-3xl bg-gray-900 px-6 pb-9 pt-64 shadow-xl sm:px-12 lg:px-8 lg:pt-80 xl:px-20 xl:pt-100">
+            {data.image?.asset?.url && (
+              <Image
+                className="absolute inset-0 h-full w-full object-cover"
+                src={data.image.asset.url}
+                alt={data.image.altText ? toPlainText(data.image.altText) : data.image.asset.altText || 'Metrics section image'}
+                width={1000} // Adjust based on actual image aspect ratio
+                height={1000}
+              />
+            )}
+          </div>
+        </div>
+        <div>
+          <div className="text-base font-semibold leading-7 text-indigo-600">
+            {toPlainText(data.pretitle)}
+          </div>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <PortableText value={data.title} components={portableTextComponents} />
+          </h2>
+          <p className="mt-6 text-xl leading-8 text-gray-600">
+            <PortableText value={data.description} components={portableTextComponents} />
+          </p>
+          <dl className="mt-10 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:pt-2">
+            {data.metrics?.map((metric, index) => (
+              <div key={index} className="flex flex-col items-start">
+                <dt className="mt-4 font-semibold text-gray-900">
+                  {metric.icon?.asset?.url && (
+                    <Image
+                      src={metric.icon.asset.url}
+                      alt={metric.icon.altText ? toPlainText(metric.icon.altText) : metric.icon.asset.altText || toPlainText(metric.label) || 'Metric icon'}
+                      width={24}
+                      height={24}
+                      className="h-6 w-6 text-indigo-600"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <p className="text-5xl font-bold text-gray-900 mt-2">{toPlainText(metric.value)}</p>
+                </dt>
+                <dd className="mt-2 text-base leading-7 text-gray-600">{toPlainText(metric.label)}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const CtaSectionComponent: React.FC<{ data: CtaSection }> = ({ data }) => (
+  <section className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="relative isolate overflow-hidden bg-gray-900 px-6 py-24 text-center shadow-2xl sm:rounded-3xl sm:px-16">
+        <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <PortableText value={data.title} components={portableTextComponents} />
+        </h2>
+        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
+          <PortableText value={data.description} components={portableTextComponents} />
+        </p>
+        <div className="mt-10 flex items-center justify-center gap-x-6">
+          {data.ctaButtons && data.ctaButtons[0] && (
+            <CustomButton button={data.ctaButtons[0]} variant="secondary" />
+          )}
+          {data.ctaButtons && data.ctaButtons[1] && (
+            <CustomButton button={data.ctaButtons[1]} variant="primary" />
+          )}
+        </div>
+        <svg viewBox="0 0 1024 1024" className="absolute left-1/2 top-1/2 -z-10 h-[64rem] w-[64rem] -translate-x-1/2 [mask-image:radial-gradient(closest-side,white,transparent)]" aria-hidden="true">
+          <circle cx={512} cy={512} r={512} fill="url(#82759db1-efc5-47bf-b2fd-520cba108650)" fillOpacity="0.7" />
+          <defs>
+            <radialGradient id="82759db1-efc5-47bf-b2fd-520cba108650">
+              <stop stopColor="#7775D6" />
+              <stop offset={1} stopColor="#E935C1" />
+            </radialGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </section>
+);
+
+const HeaderComponent: React.FC<{ data: CompanyLogo | undefined }> = ({ data }) => (
+  <header className="bg-white">
+    <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+      <div className="flex lg:flex-1">
+        <Link href="/" className="-m-1.5 p-1.5">
+          <span className="sr-only">Untitled UI</span>
+          {data?.logo?.url ? (
+            <Image className="h-8 w-auto" src={data.logo.url} alt={data.altText ? toPlainText(data.altText) : data.logo.altText || toPlainText(data.name) || 'Company logo'} width={32} height={32} />
+          ) : (
+            <span className="text-lg font-bold text-gray-900">Untitled UI</span>
+          )}
+        </Link>
+      </div>
+      <div className="flex lg:hidden">
+        <button type="button" className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700">
+          <span className="sr-only">Open main menu</span>
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+      </div>
+      <div className="hidden lg:flex lg:gap-x-12">
+        {/* Hardcoded navigation as schema doesn't provide it */}
+        <Link href="#" className="text-sm font-semibold leading-6 text-gray-900">Home</Link>
+        <Link href="#" className="text-sm font-semibold leading-6 text-gray-900">Products</Link>
+        <Link href="#" className="text-sm font-semibold leading-6 text-gray-900">Resources</Link>
+        <Link href="#" className="text-sm font-semibold leading-6 text-gray-900">Pricing</Link>
+      </div>
+      <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+        <Link href="#" className="text-sm font-semibold leading-6 text-gray-900">
+          {/* User avatar is hardcoded as it's not in the schema */}
+          <Image src="/avatar.png" alt="User Avatar" width={32} height={32} className="rounded-full" />
+        </Link>
+      </div>
+    </nav>
+  </header>
+);
+
+const FooterComponent: React.FC<{ data: DesktopData['siteSettings']['footer'] }> = ({ data }) => (
+  <footer className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+        <div className="space-y-8">
+          {data?.logo?.logo?.url ? (
+            <Image className="h-8" src={data.logo.logo.url} alt={data.logo.altText ? toPlainText(data.logo.altText) : data.logo.logo.altText || toPlainText(data.logo.name) || 'Company logo'} width={32} height={32} />
+          ) : (
+            <span className="text-lg font-bold text-gray-900">Untitled UI</span>
+          )}
+          <p className="text-sm leading-6 text-gray-600">
+            © 2077 Untitled UI. All rights reserved.
+          </p>
+        </div>
+        <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+          {data?.linkColumns?.map((column, colIdx) => (
+            <div key={colIdx} className="md:grid md:grid-cols-2 md:gap-8">
+              <div className="mt-10 md:mt-0">
+                <h3 className="text-sm font-semibold leading-6 text-gray-900">{toPlainText(column.title)}</h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {column.links?.map((link, linkIdx) => (
+                    <li key={linkIdx}>
+                      <Link href={link.link?.externalUrl ? toPlainText(link.link.externalUrl) : (link.link?.internalLink || '#')} className="text-sm leading-6 text-gray-600 hover:text-gray-900">
+                        {toPlainText(link.label)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </footer>
+);
+
+
+interface DesktopProps {
+  data: DesktopData;
+}
+
+const Desktop: React.FC<DesktopProps> = ({ data }) => {
+  if (!data || !data.page) {
+    return <div>No page data found.</div>;
+  }
+
+  const { page, siteSettings } = data;
+
+  return (
+    <div className="bg-white">
+      <HeaderComponent data={siteSettings?.header?.logo} />
+
+      <main>
+        {page.pageBuilder?.map((section) => {
+          switch (section._type) {
+            case 'herosection':
+              return <HeroSectionComponent key={section._key} data={section} />;
+            case 'socialproofsection':
+              return <SocialProofSectionComponent key={section._key} data={section} />;
+            case 'featuressection':
+              return <FeaturesSectionComponent key={section._key} data={section} />;
+            case 'quotesection':
+              return <QuoteSectionComponent key={section._key} data={section} />;
+            case 'metricssection':
+              return <MetricsSectionComponent key={section._key} data={section} />;
+            case 'ctasection':
+              return <CtaSectionComponent key={section._key} data={section} />;
+            default:
+              return null;
+          }
+        })}
+      </main>
+
+      <FooterComponent data={siteSettings?.footer} />
+    </div>
+  );
+};
+
+export default Desktop;
+```
+
+// FILEPATH: page.tsx
+```tsx
+import { getDesktopDataQuery } from './query';
+import { createClient } from 'next-sanity'; // Using createClient for server-side fetching
+import Desktop from './component';
+import { DesktopData } from './types';
+
+// Configure your Sanity client
+const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  apiVersion: '2023-03-01', // Use a recent API version
+  useCdn: process.env.NODE_ENV === 'production', // Use CDN in production
+});
+
+// Revalidate data every 60 seconds
+export const revalidate = 60;
+
+interface PageProps {
+  params: { slug: string };
+}
+
+export default async function DesktopPage({ params }: PageProps) {
+  const { slug } = params; // Correct way to access params in Next.js App Router
+
+  // Fetch data using the GROQ query
+  const data: DesktopData | null = await client.fetch(getDesktopDataQuery, { slug });
+
+  if (!data || !data.page) {
+    // Handle 404 or no data found
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <p className="text-xl text-gray-700">Page not found.</p>
+      </div>
+    );
+  }
+
+  return <Desktop data={data} />;
+}
+```
