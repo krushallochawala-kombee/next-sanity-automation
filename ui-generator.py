@@ -250,11 +250,13 @@ TypeScript Types (types.ts):
 - Include proper Link interface with externalUrl and internalLink
 
 Smart GROQ Query (query.ts):
-- CRITICAL: Check schema structure first - use internationalized arrays if needed
-- For internationalized schemas: `slug[0].value.current == $slug` 
-- For simple schemas: `slug.current == $slug`
-- Project fields directly without over-expansion for internationalized arrays
-- NO JavaScript template literals (${}) - pure GROQ only
+- CRITICAL: For internationalized arrays, project the WHOLE field, not individual values
+- ❌ NEVER use: `title[0].value` or `field[0].value.asset->` - These are INVALID GROQ syntax
+- ✅ CORRECT: For internationalized text fields, use: `title` (project whole field)
+- ✅ CORRECT: For internationalized image fields, use: `image {{ asset->{{url, altText}} }}`
+- ✅ CORRECT: For filtering, use: `slug.current == $slug` (slug is usually not internationalized)
+- Handle internationalized content in components with helper functions
+- NO JavaScript template literals (${{variables}}) - pure GROQ only
 - Test queries with debug scripts before generating components
 
 React Component (component.tsx):
@@ -276,7 +278,9 @@ Next.js Page Route (page.tsx):
 - Use proper error handling for data fetching
 
 OUTPUT FORMAT:
-Provide exactly four code blocks in this format:
+⚠️ CRITICAL: You MUST provide exactly four code blocks in this EXACT format. Each code block must start with a FILEPATH comment line followed immediately by a code block.
+
+**REQUIRED FORMAT - FOLLOW EXACTLY:**
 
 // FILEPATH: types.ts
 ```typescript
@@ -301,11 +305,21 @@ export const get{component_name}DataQuery = groq`
       pageBuilder[] {{
         _key,
         _type,
-        // Add your section types here with proper GROQ syntax
-        // Example: _type == "herosection" => {{
-        //   headline,
-        //   image->{{ asset->{{url, altText}} }}
-        // }}
+        // CORRECT examples for internationalized arrays:
+        _type == "herosection" => {{
+          headline,                    // ✅ Correct: project whole internationalized field
+          tagline,                     // ✅ Correct: project whole internationalized field  
+          image {{ asset->{{url, altText}} }},  // ✅ Correct: internationalized image syntax
+          // ❌ NEVER use: headline[0].value or image[0].value.asset->
+        }},
+        _type == "socialproofsection" => {{
+          title,                       // ✅ Correct: project whole field
+          description,                 // ✅ Correct: project whole field
+          logos[]->{{                   // ✅ Correct: reference expansion
+            name,                      // ✅ Correct: project whole field in referenced doc
+            logo {{ asset->{{url, altText}} }}  // ✅ Correct: image in referenced doc
+          }}
+        }}
       }}
     }},
     "siteSettings": *[_type == "siteSettings"][0] {{
@@ -361,7 +375,7 @@ import {{ notFound }} from 'next/navigation';
 import type {{ {component_name}Data }} from '@/components/generated/{component_name}/types';
 
 interface PageProps {{
-  params: Promise<{{ slug: string }>>;
+  params: Promise<{{ slug: string }}>;
 }}
 
 export default async function {component_name}Page({{ params }}: PageProps) {{
@@ -386,6 +400,30 @@ CRITICAL REQUIREMENTS:
 6. Handle missing data gracefully with fallbacks
 7. Use proper TypeScript types
 8. Test all generated queries for syntax errors
+
+⚠️ FORMATTING REQUIREMENTS - ESSENTIAL:
+1. Start each code block with: // FILEPATH: [filename]
+2. Follow immediately with: ```typescript or ```tsx
+3. End each code block with: ```
+4. NO extra text between FILEPATH and code block
+5. Provide exactly 4 code blocks (types.ts, query.ts, component.tsx, page.tsx)
+
+🚨 CRITICAL GROQ SYNTAX RULES:
+- ❌ NEVER use: `field[0].value` or `field[0].value.asset->` (INVALID GROQ!)
+- ✅ ALWAYS use: `field` for internationalized text and `field {{ asset->{{url, altText}} }}` for images
+- The validation will REJECT queries with [0].value patterns!
+
+**Example of correct format:**
+// FILEPATH: types.ts
+```typescript
+[your code here]
+```
+
+// FILEPATH: query.ts
+```typescript
+[your code here - with CORRECT GROQ syntax!]
+```
+[continue for all 4 files...]
 """
 
 
@@ -416,44 +454,128 @@ def call_gemini_api(prompt: str, image: Image.Image):
 def validate_groq_syntax(content: str) -> tuple[bool, str]:
     """Validate GROQ query for common syntax errors."""
     errors = []
-    
+
     # Check for JavaScript template literals in GROQ
     if "${" in content and "groq`" in content:
-        errors.append("❌ Found JavaScript template literals (${}) in GROQ query - use pure GROQ syntax only")
-    
+        errors.append(
+            "❌ Found JavaScript template literals (${}) in GROQ query - use pure GROQ syntax only"
+        )
+
+    # CRITICAL: Check for invalid internationalized array access patterns
+    import re
+
+    # Pattern 1: field[0].value - Invalid GROQ syntax for internationalized arrays
+    invalid_array_pattern = re.compile(r"\w+\[0\]\.value", re.MULTILINE)
+    if invalid_array_pattern.search(content):
+        errors.append(
+            "❌ Found 'field[0].value' - Invalid GROQ syntax! For internationalized arrays, just use 'field' and handle in component"
+        )
+
+    # Pattern 2: field[0].value.asset-> - Invalid asset access in internationalized arrays
+    invalid_asset_pattern = re.compile(r"\w+\[0\]\.value\.asset->", re.MULTILINE)
+    if invalid_asset_pattern.search(content):
+        errors.append(
+            "❌ Found 'field[0].value.asset->' - Invalid GROQ syntax! Use 'field { asset->{url, altText} }' instead"
+        )
+
+    # Pattern 3: Check for any [n].value patterns (common mistake)
+    bracket_value_pattern = re.compile(r"\[\d+\]\.value", re.MULTILINE)
+    if bracket_value_pattern.search(content):
+        errors.append(
+            "❌ Found '[n].value' pattern - Invalid GROQ syntax! For internationalized fields, project the whole field and handle in component"
+        )
+
     # Check for malformed image projections
     if "asset->url" in content and "asset->{" not in content:
         errors.append("❌ Found 'asset->url' - should be 'asset->{url}'")
-    
+
     # Check for missing closing braces
     open_braces = content.count("{")
     close_braces = content.count("}")
     if open_braces != close_braces:
-        errors.append(f"❌ Mismatched braces: {open_braces} opening, {close_braces} closing")
-    
+        errors.append(
+            f"❌ Mismatched braces: {open_braces} opening, {close_braces} closing"
+        )
+
     # Check for slug syntax
     if "slug.current ==" in content and "internationalizedArray" in content:
-        errors.append("❌ Found 'slug.current' but schema uses internationalized arrays - use 'slug[0].value.current'")
-    
+        errors.append(
+            "❌ Found 'slug.current' but schema uses internationalized arrays - use 'slug[0].value.current'"
+        )
+
     # Check for over-projection in internationalized arrays
     if "slug[].value.current" in content:
-        errors.append("❌ Found 'slug[].value.current' - should be 'slug[0].value.current' for filtering")
-    
+        errors.append(
+            "❌ Found 'slug[].value.current' - should be 'slug[0].value.current' for filtering"
+        )
+
     return len(errors) == 0, "\n".join(errors)
 
 
 def validate_nextjs_params(content: str) -> tuple[bool, str]:
     """Validate Next.js page for proper params handling."""
     errors = []
-    
+
     # Check for Next.js 15+ params
     if "params:" in content and "Promise<" not in content:
-        errors.append("❌ Found params without Promise<> - use 'params: Promise<{slug: string}>'")
-    
+        errors.append(
+            "❌ Found params without Promise<> - use 'params: Promise<{slug: string}>'"
+        )
+
     if "const { slug } = params;" in content:
-        errors.append("❌ Found synchronous params access - use 'const {slug} = await params;'")
-    
+        errors.append(
+            "❌ Found synchronous params access - use 'const {slug} = await params;'"
+        )
+
     return len(errors) == 0, "\n".join(errors)
+
+
+def manual_parse_fallback(response_text: str):
+    """Fallback manual parsing when regex patterns fail."""
+    print_info("Attempting manual parsing as fallback...")
+
+    files_found = []
+    lines = response_text.split("\n")
+
+    current_filepath = None
+    current_content = []
+    in_code_block = False
+
+    for line in lines:
+        # Look for FILEPATH lines
+        if "FILEPATH:" in line and not in_code_block:
+            # Save previous file if exists
+            if current_filepath and current_content:
+                content = "\n".join(current_content).strip()
+                if content:
+                    files_found.append((current_filepath, content))
+
+            # Extract filepath
+            current_filepath = line.split("FILEPATH:", 1)[1].strip()
+            current_content = []
+            continue
+
+        # Handle code blocks
+        if line.strip().startswith("```"):
+            if not in_code_block:
+                in_code_block = True
+                continue
+            else:
+                in_code_block = False
+                continue
+
+        # Collect content inside code blocks
+        if in_code_block and current_filepath:
+            current_content.append(line)
+
+    # Don't forget the last file
+    if current_filepath and current_content:
+        content = "\n".join(current_content).strip()
+        if content:
+            files_found.append((current_filepath, content))
+
+    print_info(f"Manual parsing found {len(files_found)} files")
+    return files_found
 
 
 def parse_and_create_files(
@@ -466,14 +588,90 @@ def parse_and_create_files(
     component_dir.mkdir(parents=True, exist_ok=True)
     page_dir.mkdir(parents=True, exist_ok=True)
 
-    file_pattern = re.compile(
-        r"//\s*FILEPATH:\s*([^\n]+)\n```\w*\n([\s\S]*?)\n```", re.MULTILINE
-    )
+    # Try multiple patterns to handle different AI response formats
+    file_patterns = [
+        # Standard format: // FILEPATH: path
+        re.compile(
+            r"//\s*FILEPATH:\s*([^\n]+)\n```(?:\w+)?\n([\s\S]*?)\n```", re.MULTILINE
+        ),
+        # Alternative format: FILEPATH: path (without //)
+        re.compile(r"FILEPATH:\s*([^\n]+)\n```(?:\w+)?\n([\s\S]*?)\n```", re.MULTILINE),
+        # With language specifier: ```typescript or ```tsx
+        re.compile(
+            r"//\s*FILEPATH:\s*([^\n]+)\n```(?:typescript|tsx|ts|javascript|jsx|js)\n([\s\S]*?)\n```",
+            re.MULTILINE,
+        ),
+        # More flexible whitespace handling
+        re.compile(
+            r"//\s*FILEPATH\s*:\s*([^\n]+)\s*\n\s*```\w*\s*\n([\s\S]*?)\n\s*```",
+            re.MULTILINE,
+        ),
+    ]
 
     files_created = {}
     validation_errors = []
-    
-    for match in file_pattern.finditer(response_text):
+
+    # Try multiple patterns to find files
+    matches = []
+    pattern_used = None
+
+    for i, pattern in enumerate(file_patterns):
+        matches = list(pattern.finditer(response_text))
+        if matches:
+            pattern_used = i + 1
+            print_info(f"Found files using pattern #{pattern_used}")
+            break
+
+    if not matches:
+        print_info("⚠️  Regex patterns failed to find files. Trying fallback parsing...")
+
+        # Debug information
+        print_info("🔍 Debug Information:")
+        print_info(f"Response length: {len(response_text)} characters")
+
+        # Check for common patterns that might indicate issues
+        code_blocks = response_text.count("```")
+        filepath_mentions = response_text.count("FILEPATH")
+        comment_mentions = response_text.count("//")
+
+        print_info(f"Code blocks found (```): {code_blocks}")
+        print_info(f"FILEPATH mentions: {filepath_mentions}")
+        print_info(f"Comment markers (//): {comment_mentions}")
+
+        # Try manual parsing as fallback
+        manual_files = manual_parse_fallback(response_text)
+
+        if manual_files:
+            print_success(
+                f"✅ Fallback parsing successful! Found {len(manual_files)} files"
+            )
+            # Convert manual parsing results to match format
+            matches = []
+            for filepath, content in manual_files:
+                # Create a mock match object
+                class MockMatch:
+                    def __init__(self, fp, cont):
+                        self.filepath = fp
+                        self.content = cont
+
+                    def group(self, n):
+                        return self.filepath if n == 1 else self.content
+
+                matches.append(MockMatch(filepath, content))
+        else:
+            # Show debug info if even manual parsing fails
+            lines = response_text.split("\n")[:20]
+            print_info("First 20 lines of AI response:")
+            for i, line in enumerate(lines, 1):
+                print_info(f"  {i:2d}: {line[:100]}{'...' if len(line) > 100 else ''}")
+
+            print_error(
+                "❌ Both regex and manual parsing failed. Check ai_response_debug.txt for the complete AI response format."
+            )
+
+    print_info(f"Found {len(matches)} files to create")
+
+    for match in matches:
         filepath = match.group(1).strip()
         content = match.group(2).strip()
 
@@ -485,11 +683,13 @@ def parse_and_create_files(
             is_valid, error_msg = validate_groq_syntax(content)
             if not is_valid:
                 validation_errors.append(f"GROQ Validation in {filename}:\n{error_msg}")
-        
+
         if filename == "page.tsx":
             is_valid, error_msg = validate_nextjs_params(content)
             if not is_valid:
-                validation_errors.append(f"Next.js Validation in {filename}:\n{error_msg}")
+                validation_errors.append(
+                    f"Next.js Validation in {filename}:\n{error_msg}"
+                )
 
         if filename == "page.tsx":
             file_path = page_dir / filename
@@ -508,9 +708,122 @@ def parse_and_create_files(
         print_info("Files created but may need manual fixes.")
 
     if len(files_created) < 4:
-        print_error(
-            f"Expected 4 code blocks, but only found {len(files_created)}. Check the AI response."
+        print_info(f"⚠️  Expected 4 code blocks, but only found {len(files_created)}.")
+        print_info(
+            "This might be normal if the AI provided a different number of files."
         )
+        print_info("Check ai_response_debug.txt to see the actual AI response format.")
+        if len(files_created) == 0:
+            print_error(
+                "No files were created. There might be a formatting issue with the AI response."
+            )
+
+
+def create_sample_ai_response(component_name: str):
+    """Create a sample AI response file showing the expected format."""
+    sample_response = f"""
+This is a sample of the expected AI response format for the UI generator.
+
+// FILEPATH: types.ts
+```typescript
+import {{ PortableTextBlock }} from '@portabletext/types';
+
+export type PortableTextContent = PortableTextBlock[];
+
+export type PageData = {{
+  _id: string;
+  title?: string;
+  slug?: {{ current?: string }};
+  content?: PortableTextContent;
+}};
+
+export type {component_name}Data = {{
+  page: PageData;
+  siteSettings: {{
+    siteName?: string;
+    siteDescription?: string;
+  }};
+}};
+```
+
+// FILEPATH: query.ts
+```typescript
+import {{ groq }} from 'next-sanity';
+
+export const get{component_name}DataQuery = groq`
+  {{
+    "page": *[_type == "page" && slug.current == $slug][0] {{
+      _id,
+      title,
+      slug {{ current }},
+      content
+    }},
+    "siteSettings": *[_type == "siteSettings"][0] {{
+      siteName,
+      siteDescription
+    }}
+  }}
+`;
+```
+
+// FILEPATH: component.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import {{ PortableText }} from '@portabletext/react';
+import type {{ {component_name}Data }} from './types';
+
+interface Props {{
+  data: {component_name}Data;
+}}
+
+export default function {component_name}({{ data }}: Props) {{
+  return (
+    <main>
+      <h1>{{data.page?.title || 'Untitled'}}</h1>
+      {{data.page?.content && (
+        <PortableText value={{data.page.content}} />
+      )}}
+    </main>
+  );
+}}
+```
+
+// FILEPATH: page.tsx
+```tsx
+import {{ client }} from '@/sanity/lib/client';
+import {{ get{component_name}DataQuery }} from '@/components/generated/{component_name}/query';
+import {component_name} from '@/components/generated/{component_name}/component';
+import {{ notFound }} from 'next/navigation';
+import type {{ {component_name}Data }} from '@/components/generated/{component_name}/types';
+
+interface PageProps {{
+  params: Promise<{{ slug: string }}>;
+}}
+
+export default async function {component_name}Page({{ params }}: PageProps) {{
+  const {{ slug }} = await params;
+  
+  const data: {component_name}Data | null = await client.fetch(get{component_name}DataQuery, {{ slug }});
+  
+  if (!data || !data.page) {{
+    notFound();
+  }}
+  
+  return <{component_name} data={{data}} />;
+}}
+```
+"""
+
+    with open(
+        f"sample_ai_response_{component_name.lower()}.txt", "w", encoding="utf-8"
+    ) as f:
+        f.write(sample_response.strip())
+
+    print_info(
+        f"Created sample_ai_response_{component_name.lower()}.txt showing expected format"
+    )
 
 
 def create_schema_debug_script():
@@ -557,11 +870,13 @@ async function analyzeSchema() {
 
 analyzeSchema().catch(console.error);
 """
-    
+
     with open("analyze-schema.js", "w", encoding="utf-8") as f:
         f.write(debug_script.strip())
-    
-    print_info("Created analyze-schema.js - run this to understand your schema structure")
+
+    print_info(
+        "Created analyze-schema.js - run this to understand your schema structure"
+    )
 
 
 def setup_project_dependencies():
@@ -657,7 +972,7 @@ def main():
 
     # 0. Setup project dependencies and configuration
     setup_project_dependencies()
-    
+
     # 0.5. Create schema analysis tool
     create_schema_debug_script()
 
@@ -671,6 +986,9 @@ def main():
 
     component_name = format_name_to_pascal_case(selected_frame["name"])
     node_id = selected_frame["id"]
+
+    # Create sample AI response for debugging
+    create_sample_ai_response(component_name)
 
     # 3. Export the visual blueprint
     figma_image = export_figma_frame_as_image(node_id, figma_api_key, figma_file_id)
@@ -693,9 +1011,12 @@ def main():
 
     parse_and_create_files(ai_response, component_name, component_dir, page_dir)
 
-    print("\n🚀 Intelligent code generation complete!")
+    print("\n🚀 Enhanced UI generation complete!")
     print(f"   - Component files are in: {component_dir}")
     print(f"   - A new page route is at: {page_dir}")
+    print(
+        f"   - Sample format created: sample_ai_response_{component_name.lower()}.txt"
+    )
     print("\nNext Steps:")
     print(
         f"1. **Review the generated code**, especially the query in `{component_dir / 'query.ts'}` to see how the AI mapped the design to your schemas."
@@ -706,8 +1027,14 @@ def main():
     print(
         f"3. **Start your app** (`npm run dev`) and navigate to the new route (e.g., `http://localhost:3000/{page_route_name}s/your-slug`)."
     )
+    print("\n💡 **Tips**: ")
+    print(f"   - Check ai_response_debug.txt if you encounter parsing issues")
     print(
-        "\n💡 **Tip**: The script has automatically configured your project for PortableText and Sanity images!"
+        f"   - Use sample_ai_response_{component_name.lower()}.txt as a format reference"
+    )
+    print(f"   - Run analyze-schema.js to understand your data structure")
+    print(
+        "   - The script has automatically configured your project for PortableText and Sanity images!"
     )
 
 

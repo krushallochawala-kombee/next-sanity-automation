@@ -37,13 +37,13 @@ export default defineType({
       type: 'internationalizedArrayText',
       description: 'Description for social media sharing (if different from Meta Description).',
     }),
-    defineField({
-      name: 'keywords',
-      title: 'Keywords',
-      type: 'array',
-      description: 'Comma-separated keywords for search engines (optional, less critical now).',
-      of: [{type: 'internationalizedArrayString'}],
-    }),
+    // defineField({
+    //   name: 'keywords',
+    //   title: 'Keywords',
+    //   type: 'array',
+    //   description: 'Comma-separated keywords for search engines (optional, less critical now).',
+    //   of: [{type: 'internationalizedArrayString'}],
+    // }),
     defineField({
       name: 'noIndex',
       title: 'No Index',
