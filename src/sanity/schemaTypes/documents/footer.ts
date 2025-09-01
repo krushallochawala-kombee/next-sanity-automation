@@ -6,45 +6,38 @@ export default defineType({
   type: 'document',
   fields: [
     defineField({
+      name: 'footerLogo',
+      title: 'Footer Logo',
+      type: 'reference',
+      to: [{type: 'companylogo'}],
+      description: 'The company logo displayed in the footer.',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'linkColumns',
       title: 'Link Columns',
       type: 'array',
-      description: 'The columns of links displayed in the footer. Use existing "Footer links column" objects.',
-      of: [{type: 'footerlinkscolumn'}],
-      validation: (Rule) => Rule.min(1).error('At least one link column is required.'),
-    }),
-    defineField({
-      name: 'logo',
-      title: 'Company Logo',
-      type: 'reference',
-      to: [{type: 'companylogo'}],
-      description: 'The company logo to display in the footer.',
+      of: [{type: 'footerlinkcolumn'}],
+      description: 'Organize footer links into multiple columns with headings.',
+      validation: (Rule) => Rule.min(1).max(6),
     }),
     defineField({
       name: 'copyrightText',
       title: 'Copyright Text',
-      type: 'internationalizedArrayText',
-      description: 'The copyright text (e.g., © 2023 Your Company. All rights reserved.).',
-      validation: (Rule) => Rule.required().error('Copyright text is required.'),
+      type: 'internationalizedArrayString',
+      description: 'The copyright notice displayed at the bottom of the footer.',
+      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
       copyright: 'copyrightText.0.value',
-      logoAsset: 'logo->image.0.value.asset', // Access asset from the referenced companylogo document
-      linkColumnCount: 'linkColumns.length',
+      linkColumnsCount: 'linkColumns.length',
     },
-    prepare({copyright, logoAsset, linkColumnCount}) {
-      const subtitle = copyright
-        ? copyright
-        : linkColumnCount > 0
-          ? `${linkColumnCount} link columns`
-          : 'No content configured';
-
+    prepare({copyright, linkColumnsCount}) {
       return {
         title: 'Global Footer',
-        subtitle: subtitle,
-        media: logoAsset,
+        subtitle: copyright || `${linkColumnsCount || 0} link columns`,
       }
     },
   },

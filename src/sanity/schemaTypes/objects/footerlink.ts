@@ -12,20 +12,18 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'link',
-      title: 'Link Destination',
-      type: 'link', // Reference to the 'link' object type
+      name: 'url',
+      title: 'URL',
+      type: 'internationalizedArrayUrl',
       validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
       title: 'label.0.value',
-      url: 'link.url.0.value', // Assuming the 'link' object has an internationalized 'url' field
-      pageTitle: 'link.internalLink->title.0.value', // Assuming 'link' can reference a page
+      subtitle: 'url.0.value',
     },
-    prepare({title, url, pageTitle}) {
-      const subtitle = url || pageTitle || 'No destination set';
+    prepare({title, subtitle}) {
       return {
         title: title || 'Untitled Footer Link',
         subtitle: subtitle,

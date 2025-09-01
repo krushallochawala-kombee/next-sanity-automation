@@ -19,7 +19,7 @@ export default defineType({
     }),
     defineField({
       name: 'authorTitle',
-      title: 'Author Title/Position',
+      title: 'Author Title/Role',
       type: 'internationalizedArrayString',
     }),
     defineField({

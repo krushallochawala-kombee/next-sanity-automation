@@ -2,41 +2,44 @@ import {defineType, defineField} from 'sanity'
 
 export default defineType({
   name: 'ctasection',
-  title: 'Call to Action Section',
+  title: 'CTA Section',
   type: 'object',
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
+      name: 'heading',
+      title: 'Heading',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
+      name: 'tagline',
+      title: 'Tagline',
+      description: 'A short descriptive text for the CTA.',
       type: 'internationalizedArrayText',
-    }),
-    defineField({
-      name: 'image',
-      title: 'Image',
-      type: 'internationalizedArrayImage',
     }),
     defineField({
       name: 'button',
       title: 'Call to Action Button',
-      type: 'button',
+      type: 'button', // Referencing the 'button' object type
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'image',
+      title: 'Background Image',
+      type: 'internationalizedArrayImage',
+      description: 'Optional background image for the CTA section.',
     }),
   ],
   preview: {
     select: {
-      title: 'title.0.value',
-      subtitle: 'description.0.value',
+      title: 'heading.0.value',
+      subtitle: 'tagline.0.value',
       media: 'image.0.value.asset',
     },
     prepare({title, subtitle, media}) {
       return {
         title: title || 'Untitled CTA Section',
-        subtitle: subtitle,
+        subtitle: subtitle || 'Call to Action Section',
         media: media,
       }
     },

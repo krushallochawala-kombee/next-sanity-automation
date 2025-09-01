@@ -25,20 +25,19 @@ export default defineType({
       name: 'pageBuilder',
       title: 'Page Sections',
       type: 'array',
-      description: 'Add and reorder sections for your page.',
       of: [
-        {type: 'author'},
+        {type: 'badge'},
         {type: 'button'},
         {type: 'ctasection'},
         {type: 'featuressection'},
         {type: 'footerlink'},
-        {type: 'footerlinkscolumn'},
+        {type: 'footerlinkcolumn'},
         {type: 'herosection'},
         {type: 'imagewithalt'},
         {type: 'link'},
         {type: 'metricssection'},
         {type: 'quotesection'},
-        {type: 'seo'}, // Note: This is a standalone object in the list, though usually embedded. Following strict instruction.
+        {type: 'seo'}, // Note: This refers to the 'seo' object type, not the document.
         {type: 'socialproofsection'},
       ],
     }),
@@ -46,19 +45,19 @@ export default defineType({
       name: 'seo',
       title: 'SEO',
       type: 'seo',
-      description: 'Search Engine Optimization metadata.',
+      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
     select: {
       title: 'title.0.value',
-      subtitle: 'slug.0.value.current',
+      slug: 'slug.0.current',
       media: 'seo.ogImage.0.value.asset',
     },
-    prepare({title, subtitle, media}) {
+    prepare({title, slug, media}) {
       return {
         title: title || 'Untitled Page',
-        subtitle: subtitle ? `/${subtitle}` : 'No slug set',
+        subtitle: slug ? `/${slug}` : 'No slug set',
         media: media,
       }
     },

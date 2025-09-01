@@ -13,16 +13,16 @@ export default defineType({
     }),
     defineField({
       name: 'altText',
-      title: 'Alternative Text',
+      title: 'Alt Text',
+      description: 'Important for accessibility and SEO. Describe the image content concisely.',
       type: 'internationalizedArrayString',
-      description: 'Important for SEO and accessibility. Describe the image content.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'caption',
       title: 'Caption',
+      description: 'Optional caption for the image.',
       type: 'internationalizedArrayText',
-      description: 'Optional text displayed below the image.',
     }),
   ],
   preview: {

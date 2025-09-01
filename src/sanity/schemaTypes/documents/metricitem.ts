@@ -6,38 +6,42 @@ export default defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'value',
-      title: 'Metric Value/Number',
+      name: 'label',
+      title: 'Label',
       type: 'internationalizedArrayString',
-      description: 'The numeric value or primary text of the metric (e.g., "10M+", "99%").',
+      description: 'The descriptive label for the metric (e.g., "Happy Customers").',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'label',
-      title: 'Metric Label/Description',
-      type: 'internationalizedArrayText',
-      description: 'A short description or label for the metric (e.g., "Active Users", "Customer Satisfaction").',
+      name: 'value',
+      title: 'Value',
+      type: 'internationalizedArrayString',
+      description: 'The metric value (e.g., "10K+", "99%").',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'description',
+      title: 'Description',
+      type: 'internationalizedArrayText',
+      description: 'An optional, longer description for the metric.',
     }),
     defineField({
       name: 'icon',
       title: 'Icon',
       type: 'internationalizedArrayImage',
-      description: 'An optional icon to visually represent the metric.',
+      description: 'An optional icon to represent the metric.',
     }),
   ],
   preview: {
     select: {
-      value: 'value.0.value',
-      label: 'label.0.value',
+      title: 'label.0.value',
+      subtitle: 'value.0.value',
       media: 'icon.0.value.asset',
     },
-    prepare({value, label, media}) {
-      const title = value ? `${value} ${label || ''}`.trim() : 'Untitled Metric';
-      const subtitle = label && value ? label : (value ? 'No label provided' : 'No value provided');
+    prepare({title, subtitle, media}) {
       return {
-        title: title,
-        subtitle: subtitle,
+        title: title || 'Untitled Metric',
+        subtitle: subtitle ? `Value: ${subtitle}` : '',
         media: media,
       }
     },

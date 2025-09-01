@@ -1,40 +1,32 @@
 import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: 'featureitem',
-  title: 'Feature Item',
+  name: 'badge',
+  title: 'Badge',
   type: 'object',
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
+      name: 'label',
+      title: 'Label',
       type: 'internationalizedArrayString',
+      description: 'The text displayed on the badge.',
       validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'internationalizedArrayText',
     }),
     defineField({
       name: 'icon',
       title: 'Icon',
       type: 'internationalizedArrayImage',
-      options: {
-        hotspot: true,
-      },
+      description: 'Optional icon for the badge.',
     }),
   ],
   preview: {
     select: {
-      title: 'title.0.value',
-      subtitle: 'description.0.value',
+      title: 'label.0.value',
       media: 'icon.0.value.asset',
     },
-    prepare({title, subtitle, media}) {
+    prepare({title, media}) {
       return {
-        title: title || 'Untitled Feature Item',
-        subtitle: subtitle,
+        title: title || 'Untitled Badge',
         media: media,
       }
     },

@@ -7,7 +7,7 @@ export default defineType({
   fields: [
     defineField({
       name: 'title',
-      title: 'Section Title',
+      title: 'Title',
       type: 'internationalizedArrayString',
       validation: (Rule) => Rule.required(),
     }),
@@ -20,25 +20,26 @@ export default defineType({
       name: 'metrics',
       title: 'Metrics',
       type: 'array',
-      of: [{type: 'metricitem'}],
+      of: [
+        {
+          type: 'reference',
+          to: [{type: 'metricitem'}],
+        },
+      ],
       validation: (Rule) => Rule.required().min(1),
     }),
   ],
   preview: {
     select: {
       title: 'title.0.value',
-      description: 'description.0.value',
+      subtitle: 'description.0.value',
       metricCount: 'metrics.length',
     },
-    prepare({title, description, metricCount}) {
-      const subtitle = metricCount
-        ? `${metricCount} metric${metricCount === 1 ? '' : 's'}`
-        : description || 'No metrics defined';
-
+    prepare({title, subtitle, metricCount}) {
+      const metricsText = metricCount === 1 ? '1 Metric' : `${metricCount || 0} Metrics`;
       return {
-        title: title || 'Metrics Section',
-        subtitle: subtitle,
-        media: undefined, // Metrics section typically doesn't have a main image
+        title: title || 'Untitled Metrics Section',
+        subtitle: subtitle ? `${subtitle} (${metricsText})` : metricsText,
       }
     },
   },

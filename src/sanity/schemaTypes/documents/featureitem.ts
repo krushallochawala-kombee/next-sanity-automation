@@ -1,8 +1,8 @@
 import {defineType, defineField} from 'sanity'
 
 export default defineType({
-  name: 'feature',
-  title: 'Feature',
+  name: 'featureitem',
+  title: 'Feature Item',
   type: 'document',
   fields: [
     defineField({
@@ -15,24 +15,22 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'internationalizedArrayText',
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'icon',
-      title: 'Icon',
+      name: 'image',
+      title: 'Image',
       type: 'internationalizedArrayImage',
-      description: 'An optional icon or image representing this feature.',
     }),
   ],
   preview: {
     select: {
       title: 'title.0.value',
       subtitle: 'description.0.value',
-      media: 'icon.0.value.asset',
+      media: 'image.0.value.asset',
     },
     prepare({title, subtitle, media}) {
       return {
-        title: title || 'Untitled Feature',
+        title: title || 'Untitled Feature Item',
         subtitle: subtitle,
         media: media,
       }
