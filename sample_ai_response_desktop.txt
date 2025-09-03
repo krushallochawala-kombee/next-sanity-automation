@@ -1,0 +1,331 @@
+This is a sample of the expected AI response format for the UI generator.
+
+// FILEPATH: types.ts
+```typescript
+import { PortableTextBlock } from '@portabletext/types';
+
+export type PortableTextContent = PortableTextBlock[];
+
+export type PageData = {
+  _id: string;
+  title?: string;
+  slug?: { current?: string };
+  content?: PortableTextContent;
+};
+
+export type HeaderData = {
+  _id: string;
+  logo?: {
+    _ref: string;
+    name?: InternationalizedString[];
+    logo?: InternationalizedImage[];
+  };
+  mainNavigation?: Array<{
+    _key: string;
+    label?: InternationalizedString[];
+    link?: {
+      internalLink?: { slug?: InternationalizedString[] };
+      externalUrl?: InternationalizedString[];
+    };
+  }>;
+  ctaButton?: {
+    label?: InternationalizedString[];
+    link?: {
+      internalLink?: { slug?: InternationalizedString[] };
+      externalUrl?: InternationalizedString[];
+    };
+  };
+};
+
+export type FooterData = {
+  _id: string;
+  linkColumns?: Array<{
+    _key: string;
+    title?: InternationalizedString[];
+    links?: Array<{
+      _key: string;
+      label?: InternationalizedString[];
+      link?: {
+        internalLink?: { slug?: InternationalizedString[] };
+        externalUrl?: InternationalizedString[];
+      };
+    }>;
+  }>;
+  logo?: {
+    _ref: string;
+    name?: InternationalizedString[];
+    logo?: InternationalizedImage[];
+  };
+  copyrightText?: InternationalizedString[];
+};
+
+export type DesktopData = {
+  page: PageData;
+  header: HeaderData;
+  footer: FooterData;
+  siteSettings: {
+    siteName?: string;
+    siteDescription?: string;
+  };
+};
+```
+
+// FILEPATH: query.ts
+```typescript
+import { groq } from 'next-sanity';
+
+export const getDesktopDataQuery = groq`
+  {
+    "page": *[_type == "page" && slug[0].value.current == $slug][0] {
+      _id,
+      title,
+      slug,
+      content
+    },
+    "header": *[_type == "header"][0] {
+      _id,
+      logo {
+        _ref,
+        name,
+        logo { value { asset->{url, altText} } }
+      },
+      mainNavigation[] {
+        _key,
+        label,
+        link {
+          internalLink->{ slug },
+          externalUrl
+        }
+      },
+      ctaButton {
+        label,
+        link {
+          internalLink->{ slug },
+          externalUrl
+        }
+      }
+    },
+    "footer": *[_type == "footer"][0] {
+      _id,
+      linkColumns[] {
+        _key,
+        title,
+        links[] {
+          _key,
+          label,
+          link {
+            internalLink->{ slug },
+            externalUrl
+          }
+        }
+      },
+      logo {
+        _ref,
+        name,
+        logo { value { asset->{url, altText} } }
+      },
+      copyrightText
+    },
+    "siteSettings": *[_type == "siteSettings"][0] {
+      siteName,
+      siteDescription
+    }
+  }
+`;
+```
+
+// FILEPATH: component.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import { PortableText } from '@portabletext/react';
+import type { DesktopData } from './types';
+
+interface Props {
+  data: DesktopData;
+}
+
+export default function Desktop({ data }: Props) {
+  return (
+    <>
+      {/* Global Header */}
+      {data.header && <Header data={data.header} />}
+      
+      <main>
+        {data.page?.title && (
+          <h1>{getInternationalizedString(data.page.title)}</h1>
+        )}
+        {data.page?.content && (
+          <PortableText value={data.page.content} />
+        )}
+      </main>
+      
+      {/* Global Footer */}
+      {data.footer && <Footer data={data.footer} />}
+    </>
+  );
+}
+```
+
+// FILEPATH: Header.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import type { HeaderData } from './types';
+
+// Helper functions (same as above)
+const getInternationalizedString = (data: unknown): string => {
+  if (!data) return "";
+  if (Array.isArray(data) && data.length > 0) {
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem !== null && 'value' in firstItem) {
+      const typedItem = firstItem as { value?: string };
+      return typedItem.value || "";
+    }
+  }
+  if (typeof data === 'string') {
+    return data;
+  }
+  return "";
+};
+
+interface HeaderProps {
+  data: HeaderData;
+}
+
+export default function Header({ data }: HeaderProps) {
+  // 🚨 CRITICAL: If no data from Sanity, render NOTHING
+  if (!data) return null;
+  
+  return (
+    <header>
+      {/* Logo - ONLY if data exists from Sanity */}
+      {data.logo && getInternationalizedString(data.logo.name) && (
+        <div>
+          <h1>{getInternationalizedString(data.logo.name)}</h1>
+        </div>
+      )}
+      
+      {/* Navigation - ONLY if data exists from Sanity */}
+      {data.mainNavigation && data.mainNavigation.length > 0 && (
+        <nav>
+          {data.mainNavigation
+            .filter(item => getInternationalizedString(item.label)) // 🚨 Only show items with actual data
+            .map((item, index) => (
+            <Link key={index} href={getInternationalizedString(item.link?.externalUrl) || '#'}>
+              {getInternationalizedString(item.label)}
+            </Link>
+          ))}
+        </nav>
+      )}
+      
+      {/* CTA Button - ONLY if data exists from Sanity */}
+      {data.ctaButton && getInternationalizedString(data.ctaButton.label) && (
+        <button>
+          {getInternationalizedString(data.ctaButton.label)}
+        </button>
+      )}
+    </header>
+  );
+}
+```
+
+// FILEPATH: Footer.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import type { FooterData } from './types';
+
+// Helper functions (same as above)
+const getInternationalizedString = (data: unknown): string => {
+  if (!data) return "";
+  if (Array.isArray(data) && data.length > 0) {
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem !== null && 'value' in firstItem) {
+      const typedItem = firstItem as { value?: string };
+      return typedItem.value || "";
+    }
+  }
+  if (typeof data === 'string') {
+    return data;
+  }
+  return "";
+};
+
+interface FooterProps {
+  data: FooterData;
+}
+
+export default function Footer({ data }: FooterProps) {
+  // 🚨 CRITICAL: If no data from Sanity, render NOTHING
+  if (!data) return null;
+  
+  return (
+    <footer>
+      {/* Link Columns - ONLY if data exists from Sanity */}
+      {data.linkColumns && data.linkColumns.length > 0 && (
+        <div>
+          {data.linkColumns
+            .filter(column => getInternationalizedString(column.title)) // 🚨 Only show columns with actual data
+            .map((column, index) => (
+            <div key={index}>
+              {getInternationalizedString(column.title) && (
+                <h3>{getInternationalizedString(column.title)}</h3>
+              )}
+              {column.links && column.links.length > 0 && (
+                <ul>
+                  {column.links
+                    .filter(link => getInternationalizedString(link.label)) // 🚨 Only show links with actual data
+                    .map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <Link href={getInternationalizedString(link.link?.externalUrl) || '#'}>
+                        {getInternationalizedString(link.label)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Copyright - ONLY if data exists from Sanity */}
+      {data.copyrightText && getInternationalizedString(data.copyrightText) && (
+        <p>{getInternationalizedString(data.copyrightText)}</p>
+      )}
+    </footer>
+  );
+}
+```
+
+// FILEPATH: page.tsx
+```tsx
+import { client } from '@/sanity/lib/client';
+import { getDesktopDataQuery } from '@/components/generated/Desktop/query';
+import Desktop from '@/components/generated/Desktop/component';
+import { notFound } from 'next/navigation';
+import type { DesktopData } from '@/components/generated/Desktop/types';
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function DesktopPage({ params }: PageProps) {
+  const { slug } = await params;
+  
+  const data: DesktopData | null = await client.fetch(getDesktopDataQuery, { slug });
+  
+  if (!data || !data.page) {
+    notFound();
+  }
+  
+  return <Desktop data={data} />;
+}
+```

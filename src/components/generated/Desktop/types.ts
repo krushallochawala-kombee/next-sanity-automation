@@ -1,181 +1,182 @@
-import type {
-  SanityImageCrop,
-  SanityImageHotspot,
-} from "@sanity/image-url/lib/types/types";
-import { PortableTextBlock } from "@portabletext/types";
-
-// Helper type for Portable Text fields
-export type PortableTextContent = PortableTextBlock[];
-
-// Represents the projected image asset data from Sanity
-export interface SanityAssetData {
-  url: string;
-  altText?: string; // From SanityImageAsset.altText
-  caption?: string; // From SanityImageAsset.description (often used for caption)
+// Define types that match the internationalized array structure
+export interface InternationalizedStringValue {
+  _key: string;
+  value?: string;
 }
 
-// Schema: Imagewithalt
-export interface ImageWithAlt {
-  _type: "imagewithalt";
-  asset?: SanityAssetData; // The actual image asset data (from Imagewithalt.image.asset)
-  altText?: PortableTextContent; // Optional override/supplemental alt text (Portable Text from Imagewithalt)
-  caption?: PortableTextContent; // Optional override/supplemental caption (Portable Text from Imagewithalt)
+export interface InternationalizedTextValue {
+  _key: string;
+  value?: string;
 }
 
-// Schema: Companylogo
-export interface CompanyLogo {
-  _type: "companylogo";
-  name?: PortableTextContent;
-  logo?: SanityAssetData; // The actual logo asset data (from Companylogo.logo.asset)
-  altText?: PortableTextContent; // Optional override/supplemental alt text (Portable Text from Companylogo)
-  url?: PortableTextContent; // Portable Text, but will be treated as string for URL
-}
-
-// Schema: Link
-export interface Link {
-  _type: "link";
-  label?: PortableTextContent;
-  externalUrl?: PortableTextContent; // Portable Text, but will be treated as string for URL
-  internalLink?: {
-    _ref: string;
-    _type: "reference";
-    slug?: { current: string }; // Expanded slug for internal links
+export interface InternationalizedImageValue {
+  _key: string;
+  value?: {
+    asset?: {
+      url: string;
+      altText?: string;
+    };
   };
 }
 
-// Schema: Button
+export interface InternationalizedSlugValue {
+  _key: string;
+  value?: {
+    current?: string;
+  };
+}
+
+export interface Link {
+  _key: string;
+  _type: 'link';
+  label?: InternationalizedStringValue[];
+  externalUrl?: InternationalizedStringValue[];
+  internalLink?: {
+    slug?: InternationalizedSlugValue[];
+  };
+}
+
 export interface Button {
-  _type: "button";
-  label?: PortableTextContent;
-  link?: Link; // Reference to Link
+  _key: string;
+  _type: 'button';
+  label?: InternationalizedStringValue[];
+  link?: Link;
 }
 
-// Schema: Feature
+export interface CompanyLogo {
+  _id: string;
+  _type: 'companylogo';
+  name?: InternationalizedStringValue[];
+  logo?: InternationalizedImageValue[];
+  altText?: InternationalizedStringValue[];
+  url?: InternationalizedStringValue[];
+}
+
 export interface Feature {
-  _type: "feature";
-  title?: PortableTextContent;
-  description?: PortableTextContent;
-  icon?: ImageWithAlt; // Reference to ImageWithAlt for the icon
+  _id: string;
+  _type: 'feature';
+  title?: InternationalizedStringValue[];
+  description?: InternationalizedTextValue[];
+  icon?: InternationalizedImageValue[];
 }
 
-// Schema: Metricitem
 export interface MetricItem {
-  _type: "metricitem";
-  value?: PortableTextContent;
-  label?: PortableTextContent;
-  icon?: ImageWithAlt; // Reference to ImageWithAlt for the icon
+  _key: string;
+  _type: 'metricitem';
+  value?: InternationalizedStringValue[];
+  label?: InternationalizedTextValue[];
+  icon?: InternationalizedImageValue[];
 }
 
-// Schema: Herosection
-export interface HeroSection {
-  _type: "herosection";
-  headline?: PortableTextContent;
-  tagline?: PortableTextContent;
-  image?: ImageWithAlt; // Reference to ImageWithAlt for the main image
-  ctaButtons?: Button[]; // Array of Button references (assuming plural for design)
-  // Custom fields based on design (not explicitly in provided schema)
-  pretitle?: PortableTextContent;
-  pretitleLink?: Link;
-}
-
-// Schema: Socialproofsection
-export interface SocialProofSection {
-  _type: "socialproofsection";
-  title?: PortableTextContent;
-  logos?: CompanyLogo[]; // Array of CompanyLogo references
-}
-
-// Schema: Featuressection
-export interface FeaturesSection {
-  _type: "featuressection";
-  name?: string; // String
-  title?: PortableTextContent;
-  description?: PortableTextContent;
-  features?: Feature[]; // Array of Feature references
-}
-
-// Schema: Quotesection
-export interface QuoteSection {
-  _type: "quotesection";
-  quote?: PortableTextContent;
-  authorName?: PortableTextContent;
-  authorTitle?: PortableTextContent;
-  authorImage?: ImageWithAlt; // Reference to ImageWithAlt for the author's image
-}
-
-// Schema: Metricssection
-export interface MetricsSection {
-  _type: "metricssection";
-  title?: PortableTextContent;
-  description?: PortableTextContent;
-  metrics?: MetricItem[]; // Array of MetricItem references
-  // Custom fields based on design (not explicitly in provided schema)
-  pretitle?: PortableTextContent;
-  image?: ImageWithAlt; // Reference to ImageWithAlt for the section image
-}
-
-// Schema: Ctasection
-export interface CtaSection {
-  _type: "ctasection";
-  title?: PortableTextContent;
-  description?: PortableTextContent;
-  image?: ImageWithAlt; // Reference to ImageWithAlt for the section image
-  ctaButtons?: Button[]; // Array of Button references (assuming plural for design)
-}
-
-// Schema: Footerlink
-export interface FooterLink {
-  _type: "footerlink";
-  label?: PortableTextContent;
-  link?: Link; // Reference to Link
-}
-
-// Schema: Footerlinkscolumn
 export interface FooterLinksColumn {
-  _type: "footerlinkscolumn";
-  title?: PortableTextContent;
-  links?: FooterLink[]; // Array of FooterLink references
+  _key: string;
+  _type: 'footerlinkscolumn';
+  title?: InternationalizedStringValue[];
+  links?: Link[];
 }
 
-// Schema: Footer
-export interface Footer {
-  _type: "footer";
-  linkColumns?: FooterLinksColumn[]; // Array of FooterLinksColumn references
-  logo?: CompanyLogo; // Reference to CompanyLogo
+// Section Types
+export interface HeroSection {
+  _key: string;
+  _type: 'herosection';
+  headline?: InternationalizedStringValue[];
+  tagline?: InternationalizedTextValue[];
+  image?: InternationalizedImageValue[];
+  ctaButtons?: Button[];
 }
 
-// Schema: Header
-export interface Header {
-  _type: "header";
-  logo?: CompanyLogo; // Reference to CompanyLogo
+export interface SocialProofSection {
+  _key: string;
+  _type: 'socialproofsection';
+  title?: InternationalizedStringValue[];
+  description?: InternationalizedTextValue[];
+  logos?: CompanyLogo[];
 }
 
-// Schema: SiteSettings
-export interface SiteSettings {
-  _type: "siteSettings";
-  siteName?: PortableTextContent;
-  siteDescription?: PortableTextContent;
-  header?: Header; // Reference to Header
-  footer?: Footer; // Reference to Footer
+export interface FeaturesSection {
+  _key: string;
+  _type: 'featuressection';
+  title?: InternationalizedStringValue[];
+  description?: InternationalizedTextValue[];
+  features?: Feature[];
 }
 
-// Schema: Page
-export interface Page {
-  _type: "page";
-  title?: PortableTextContent;
-  slug?: { current: string };
-  pageBuilder?: (
-    | HeroSection
-    | SocialProofSection
-    | FeaturesSection
-    | QuoteSection
-    | MetricsSection
-    | CtaSection
-  )[];
+export interface QuoteSection {
+  _key: string;
+  _type: 'quotesection';
+  quote?: InternationalizedTextValue[];
+  authorName?: InternationalizedStringValue[];
+  authorTitle?: InternationalizedStringValue[];
+  authorImage?: InternationalizedImageValue[];
 }
 
-// Main type for the Desktop component, combining Page and SiteSettings
+export interface MetricsSection {
+  _key: string;
+  _type: 'metricssection';
+  title?: InternationalizedStringValue[];
+  description?: InternationalizedTextValue[];
+  metrics?: MetricItem[];
+}
+
+export interface CtaSection {
+  _key: string;
+  _type: 'ctasection';
+  title?: InternationalizedStringValue[];
+  description?: InternationalizedTextValue[];
+  image?: InternationalizedImageValue[];
+  button?: Button;
+}
+
+export interface ImageWithAlt {
+  _key: string;
+  _type: 'imagewithalt';
+  image?: InternationalizedImageValue[];
+  altText?: InternationalizedStringValue[];
+  caption?: InternationalizedTextValue[];
+}
+
+export type PageBuilderBlock =
+  | HeroSection
+  | SocialProofSection
+  | FeaturesSection
+  | QuoteSection
+  | MetricsSection
+  | CtaSection
+  | ImageWithAlt;
+
+export interface PageData {
+  _id: string;
+  _type: 'page';
+  title?: InternationalizedStringValue[];
+  slug?: InternationalizedSlugValue[];
+  pageBuilder?: PageBuilderBlock[];
+}
+
+// Global Components Data (inferred from design and common patterns, extending minimal schemas)
+export interface HeaderData {
+  _id: string;
+  _type: 'header';
+  logo?: CompanyLogo; // Assuming Header can reference a CompanyLogo for its logo
+  mainNavigation?: Link[]; // Assuming Header has an array of Links for navigation
+  ctaButton?: Button; // Assuming Header has a single CTA button
+}
+
+export interface FooterData {
+  _id: string;
+  _type: 'footer';
+  linkColumns?: FooterLinksColumn[];
+  logo?: CompanyLogo; // Assuming Footer can reference a CompanyLogo for its logo
+  copyrightText?: InternationalizedStringValue[]; // Assuming Footer has a copyright text field
+}
+
+export interface SiteSettingsData {
+  siteName?: InternationalizedStringValue[];
+  siteDescription?: InternationalizedTextValue[];
+}
+
 export interface DesktopData {
-  page: Page;
-  siteSettings: SiteSettings;
+  page: PageData | null;
+  header: HeaderData | null;
+  footer: FooterData | null;
+  siteSettings: SiteSettingsData | null;
 }

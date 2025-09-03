@@ -71,7 +71,6 @@ def get_all_sanity_schemas_as_json():
         )
 
     # Read the types file
-
     try:
         with open(types_file, "r", encoding="utf-8") as f:
             types_content = f.read()
@@ -81,7 +80,7 @@ def get_all_sanity_schemas_as_json():
     if not types_content:
         print_error("sanity.types.ts file is empty.")
 
-    # Enhanced schema parsing
+    # Enhanced schema parsing with better TypeScript type handling
     schema_pattern = re.compile(
         r"export\s+type\s+([\w\d_]+)\s*=\s*({[\s\S]*?})\s*(?:&|\||\s)*;", re.MULTILINE
     )
@@ -96,14 +95,15 @@ def get_all_sanity_schemas_as_json():
             not type_name.startswith("Sanity")
             and type_name != "CrossDatasetReference"
             and not type_name.startswith("InternationalizedArray")
-            and "_id" in type_body
-            or "_type" in type_body
-        ):  # Only include document/object types
-
+            and not type_name.startswith("AllSanitySchemaTypes")
+            and ("_id" in type_body or "_type" in type_body)
+        ):
             fields = []
-            # Improved field pattern to handle complex types
+
+            # More sophisticated field parsing to handle complex TypeScript types
+            # Handle both single-line and multi-line field definitions
             field_pattern = re.compile(
-                r"(\w+)\??:\s*([^;]+);", re.MULTILINE | re.DOTALL
+                r"(\w+)\??:\s*([^;\n]+(?:\{[^}]*\}[^;\n]*)*);", re.MULTILINE | re.DOTALL
             )
 
             for field_match in field_pattern.finditer(type_body):
@@ -114,17 +114,48 @@ def get_all_sanity_schemas_as_json():
                 if not (
                     field_name.startswith("_") and field_name not in ["_type", "_key"]
                 ):
+                    # Analyze field type to determine if it's internationalized
+                    is_internationalized = "InternationalizedArray" in field_type
+                    is_reference = "_ref" in field_type and "reference" in field_type
+                    is_array = field_type.startswith("Array<")
+                    is_simple_type = field_type in ["string", "number", "boolean"]
+
+                    # Determine field category for GROQ generation
+                    field_category = "unknown"
+                    if is_internationalized:
+                        if "StringValue" in field_type:
+                            field_category = "internationalized_string"
+                        elif "TextValue" in field_type:
+                            field_category = "internationalized_text"
+                        elif "ImageValue" in field_type:
+                            field_category = "internationalized_image"
+                        elif "UrlValue" in field_type:
+                            field_category = "internationalized_url"
+                        elif "SlugValue" in field_type:
+                            field_category = "internationalized_slug"
+                    elif is_reference:
+                        field_category = "reference"
+                    elif is_array and not is_internationalized:
+                        field_category = "array"
+                    elif is_simple_type:
+                        field_category = "simple"
+
                     fields.append(
                         {
                             "name": field_name,
                             "type": field_type,
                             "optional": "?" in field_match.group(0),
+                            "is_internationalized": is_internationalized,
+                            "is_reference": is_reference,
+                            "is_array": is_array,
+                            "field_category": field_category,
                         }
                     )
 
             all_schemas[type_name] = {
                 "fields": fields,
                 "is_document": "_id" in type_body and "_createdAt" in type_body,
+                "is_page_builder": "pageBuilder" in type_body,
             }
 
     if not all_schemas:
@@ -133,6 +164,17 @@ def get_all_sanity_schemas_as_json():
         )
 
     print_success(f"Found {len(all_schemas)} schemas to work with.")
+
+    # Print schema summary for debugging
+    for schema_name, schema_info in all_schemas.items():
+        if schema_info["is_document"]:
+            print_info(
+                f"📄 Document: {schema_name} ({len(schema_info['fields'])} fields)"
+            )
+        else:
+            print_info(
+                f"🧩 Object: {schema_name} ({len(schema_info['fields'])} fields)"
+            )
 
     # Save schemas to a JSON file for debugging
     with open("schema.json", "w", encoding="utf-8") as f:
@@ -228,47 +270,82 @@ This JSON object describes every piece of data you are allowed to use. You must 
 
 YOUR TASK: Generate a complete, self-contained module for a component named '{component_name}'.
 
+**CRITICAL SCHEMA ANALYSIS:**
+The schemas use INTERNATIONALIZED ARRAYS extensively. Each field with internationalized content is structured as:
+- `Array<{{ _key: string }} & InternationalizedArrayStringValue>` for strings
+- `Array<{{ _key: string }} & InternationalizedArrayTextValue>` for text
+- `Array<{{ _key: string }} & InternationalizedArrayImageValue>` for images
+- `Array<{{ _key: string }} & InternationalizedArraySlugValue>` for slugs
+
+**CRITICAL REQUIREMENT - NO STATIC CONTENT:**
+- 🚨 **ZERO static/hardcoded content allowed** - EVERYTHING must come from the Sanity query
+- 🚨 **NO placeholder text** like "Lorem ipsum", "Sample text", or "Your content here"
+- 🚨 **NO hardcoded values** - all text, images, links, and data must be dynamic
+- 🚨 **NO fallback static content** - use empty strings or null checks instead
+
+**GLOBAL HEADER & FOOTER REQUIREMENT:**
+- 🌐 **Header and Footer are GLOBAL components** - same across all pages
+- 🌐 **Generate ONE header and ONE footer** from Figma design analysis
+- 🌐 **Header/Footer data comes from Sanity** - use Header and Footer schemas
+- 🌐 **Include header/footer in ALL page queries** - fetch global data
+- 🌐 **Create separate Header.tsx and Footer.tsx components** for reusability
+- 🚨 **ZERO static content in Header/Footer** - if no data from Sanity, render NOTHING
+- 🚨 **NO fallback text** - no "Home", "About", "Contact" hardcoded links
+- 🚨 **NO placeholder logos** - if no logo from Sanity, show nothing
+- 🚨 **NO default navigation** - only show navigation items from Sanity data
+
 **IMPORTANT DATA STRUCTURE REQUIREMENTS:**
-- Text fields use PortableText (PortableTextBlock[]) instead of simple strings
-- Images are structured as: {{ asset?: {{ url: string; altText?: string }} }}
-- All text content should be rendered using @portabletext/react PortableText component
-- Links are objects with externalUrl (PortableText) and internalLink (reference with slug)
-- Use proper helper functions to extract plain text when needed for attributes
+- ALL text fields are internationalized arrays, NOT PortableText
+- Images are structured as: `{{ value?: {{ asset?: {{ url: string; altText?: string }} }} }}`
+- Use helper functions to extract values from internationalized arrays
+- Links are objects with externalUrl and internalLink (reference with slug)
+- The Page schema has a pageBuilder array with different section types
+- If data is missing, show empty state or nothing - NO static fallbacks
 
 Step 1: Data-to-Design Mapping (Your internal thought process):
 Analyze the visual design. Identify all dynamic elements (headings, text blocks, images, lists, buttons).
 Look at the available schemas and their fields. Find the best match.
 Decide which schema is the primary document type for this component (e.g., 'Page'). This will be the entry point for your query.
+🌐 **ALWAYS include Header and Footer data** in your queries - they are global components.
+🌐 **Identify header/footer elements** in the Figma design and map them to Header/Footer schemas.
 
 Step 2: Generate the Code (Your output):
 
 TypeScript Types (types.ts):
-- Import PortableTextBlock from @portabletext/types
-- Define PortableTextContent as PortableTextBlock[]
-- Create interfaces using PortableTextContent for text fields
-- Image fields should have asset.url structure
+- Create interfaces that match the internationalized array structure
+- Image fields should have: `{{ value?: {{ asset?: {{ url: string; altText?: string }} }} }}`
+- Text fields should be: `Array<{{ _key: string; value?: string }}>`
 - Include proper Link interface with externalUrl and internalLink
 
 Smart GROQ Query (query.ts):
 - CRITICAL: For internationalized arrays, project the WHOLE field, not individual values
 - ❌ NEVER use: `title[0].value` or `field[0].value.asset->` - These are INVALID GROQ syntax
 - ✅ CORRECT: For internationalized text fields, use: `title` (project whole field)
-- ✅ CORRECT: For internationalized image fields, use: `image {{ asset->{{url, altText}} }}`
-- ✅ CORRECT: For filtering, use: `slug.current == $slug` (slug is usually not internationalized)
+- ✅ CORRECT: For internationalized image fields, use: `image {{ value {{ asset->{{url, altText}} }} }}`
+- ✅ CORRECT: For filtering, use: `slug[0].value.current == $slug` (slug IS internationalized)
 - Handle internationalized content in components with helper functions
 - NO JavaScript template literals (${{variables}}) - pure GROQ only
-- Test queries with debug scripts before generating components
+- For pageBuilder sections, use conditional projections based on _type
+- 🌐 **ALWAYS include Header and Footer** in your query - they are global components
+- 🌐 **Fetch Header data**: `"header": *[_type == "header"][0] {{ ... }}`
+- 🌐 **Fetch Footer data**: `"footer": *[_type == "footer"][0] {{ ... }}`
 
 React Component (component.tsx):
-- DETECT schema structure: internationalized arrays vs PortableText
-- For internationalized arrays: create getInternationalizedString() helper with unknown type
-- For PortableText: create toPlainText() and use PortableText component
+- DETECT schema structure: ALL fields are internationalized arrays
+- Create getInternationalizedString() helper with proper type checking
+- Create getInternationalizedImage() helper for image fields
 - Handle both data structures gracefully with appropriate helpers
 - CRITICAL: Filter out null values from arrays: `data?.array?.filter(item => item !== null)`
 - CRITICAL: Use proper type guards and unknown type instead of any
 - Include 'use client' directive at the top
-- Use proper fallback values for missing data
+- 🚨 **NO static fallback content** - if data is missing, render nothing or empty state
+- 🚨 **NO hardcoded text** - all content must come from the query data
 - Use index-based keys for arrays without _key properties
+- Only render elements if data exists - use conditional rendering extensively
+- 🌐 **Include Header and Footer components** - import and render them
+- 🌐 **Pass header/footer data as props** to the global components
+- 🚨 **CRITICAL: Header/Footer must be 100% data-driven** - NO static content whatsoever
+- 🚨 **If header/footer data is missing, render NOTHING** - no fallback content
 
 Next.js Page Route (page.tsx):
 - CRITICAL: Use Next.js 15+ async params: `params: Promise<{{ slug: string }}>`
@@ -278,15 +355,27 @@ Next.js Page Route (page.tsx):
 - Use proper error handling for data fetching
 
 OUTPUT FORMAT:
-⚠️ CRITICAL: You MUST provide exactly four code blocks in this EXACT format. Each code block must start with a FILEPATH comment line followed immediately by a code block.
+⚠️ CRITICAL: You MUST provide exactly SIX code blocks in this EXACT format. Each code block must start with a FILEPATH comment line followed immediately by a code block.
 
 **REQUIRED FORMAT - FOLLOW EXACTLY:**
 
 // FILEPATH: types.ts
 ```typescript
-import {{ PortableTextBlock }} from '@portabletext/types';
+// Define types that match the internationalized array structure
+export interface InternationalizedString {{
+  _key: string;
+  value?: string;
+}}
 
-export type PortableTextContent = PortableTextBlock[];
+export interface InternationalizedImage {{
+  _key: string;
+  value?: {{
+    asset?: {{
+      url: string;
+      altText?: string;
+    }};
+  }};
+}}
 
 // Your complete types here...
 ```
@@ -297,11 +386,11 @@ import {{ groq }} from 'next-sanity';
 
 export const get{component_name}DataQuery = groq`
   {{
-    "page": *[_type == "page" && slug.current == $slug][0] {{
+    "page": *[_type == "page" && slug[0].value.current == $slug][0] {{
       _id,
       _type,
-      title,
-      slug {{ current }},
+      title,                          // ✅ Correct: project whole internationalized field
+      slug,                           // ✅ Correct: project whole internationalized field
       pageBuilder[] {{
         _key,
         _type,
@@ -309,18 +398,87 @@ export const get{component_name}DataQuery = groq`
         _type == "herosection" => {{
           headline,                    // ✅ Correct: project whole internationalized field
           tagline,                     // ✅ Correct: project whole internationalized field  
-          image {{ asset->{{url, altText}} }},  // ✅ Correct: internationalized image syntax
-          // ❌ NEVER use: headline[0].value or image[0].value.asset->
+          image {{ value {{ asset->{{url, altText}} }} }},  // ✅ Correct: internationalized image syntax
+          ctaButtons[] {{
+            _key,
+            label,
+            link {{
+              internalLink->{{ slug }},
+              externalUrl
+            }}
+          }}
         }},
         _type == "socialproofsection" => {{
           title,                       // ✅ Correct: project whole field
           description,                 // ✅ Correct: project whole field
           logos[]->{{                   // ✅ Correct: reference expansion
             name,                      // ✅ Correct: project whole field in referenced doc
-            logo {{ asset->{{url, altText}} }}  // ✅ Correct: image in referenced doc
+            logo {{ value {{ asset->{{url, altText}} }} }}  // ✅ Correct: image in referenced doc
+          }}
+        }},
+        _type == "featuressection" => {{
+          title,
+          description,
+          features[]->{{
+            title,
+            description,
+            icon {{ value {{ asset->{{url, altText}} }} }}
           }}
         }}
       }}
+    }},
+    "header": *[_type == "header"][0] {{  // 🌐 Global header data
+      _id,
+      _type,
+      logo {{
+        _ref,
+        _type,
+        name,
+        logo {{ value {{ asset->{{url, altText}} }} }}
+      }},
+      mainNavigation[] {{
+        _key,
+        _type,
+        label,
+        link {{
+          internalLink->{{ slug }},
+          externalUrl
+        }}
+      }},
+      ctaButton {{
+        _key,
+        _type,
+        label,
+        link {{
+          internalLink->{{ slug }},
+          externalUrl
+        }}
+      }}
+    }},
+    "footer": *[_type == "footer"][0] {{  // 🌐 Global footer data
+      _id,
+      _type,
+      linkColumns[] {{
+        _key,
+        _type,
+        title,
+        links[] {{
+          _key,
+          _type,
+          label,
+          link {{
+            internalLink->{{ slug }},
+            externalUrl
+          }}
+        }}
+      }},
+      logo {{
+        _ref,
+        _type,
+        name,
+        logo {{ value {{ asset->{{url, altText}} }} }}
+      }},
+      copyrightText
     }},
     "siteSettings": *[_type == "siteSettings"][0] {{
       siteName,
@@ -339,7 +497,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type {{ /* your types */ }} from './types';
 
-// Helper function to extract string from internationalized array or PortableText
+// Helper function to extract string from internationalized array
 const getInternationalizedString = (data: unknown): string => {{
   if (!data) return "";
   
@@ -360,10 +518,191 @@ const getInternationalizedString = (data: unknown): string => {{
   return "";
 }};
 
+// Helper function to extract image from internationalized array
+const getInternationalizedImage = (data: unknown): {{ url: string; altText?: string }} | null => {{
+  if (!data) return null;
+  
+  if (Array.isArray(data) && data.length > 0) {{
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem !== null && 'value' in firstItem) {{
+      const typedItem = firstItem as {{ value?: {{ asset?: {{ url: string; altText?: string }} }} }};
+      return typedItem.value?.asset || null;
+    }}
+  }}
+  
+  return null;
+}};
+
 // CRITICAL: Always filter null values from arrays
 // Example: data?.linkColumns?.filter(column => column !== null)?.map(...)
 
-// Your component code here...
+// 🚨 CRITICAL: NO STATIC CONTENT - Everything must come from data
+// Only render elements if data exists - use conditional rendering
+// Example: {{data?.title && <h1>{{getInternationalizedString(data.title)}}</h1>}}
+
+// 🌐 Import global Header and Footer components
+import Header from './Header';
+import Footer from './Footer';
+
+// Your main component code here...
+// Include Header and Footer: <Header data={{data.header}} /> and <Footer data={{data.footer}} />
+```
+```
+
+// FILEPATH: Header.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import type {{ HeaderData }} from './types';
+
+// Helper functions (same as above)
+const getInternationalizedString = (data: unknown): string => {{
+  // ... same implementation
+}};
+
+const getInternationalizedImage = (data: unknown): {{ url: string; altText?: string }} | null => {{
+  // ... same implementation
+}};
+
+interface HeaderProps {{
+  data: HeaderData;
+}}
+
+export default function Header({{ data }}: HeaderProps) {{
+  // 🚨 CRITICAL: If no data from Sanity, render NOTHING
+  if (!data) return null;
+  
+  return (
+    <header>
+      {{/* Logo - ONLY if data exists from Sanity */}}
+      {{data.logo && getInternationalizedString(data.logo.name) && (
+        <div>
+          {{getInternationalizedImage(data.logo.logo) && (
+            <Image
+              src={{getInternationalizedImage(data.logo.logo)!.url}}
+              alt={{getInternationalizedString(data.logo.altText) || ''}}
+              width={{100}}
+              height={{50}}
+            />
+          )}}
+          {{/* Show logo name if no image */}}
+          {{!getInternationalizedImage(data.logo.logo) && (
+            <span>{{getInternationalizedString(data.logo.name)}}</span>
+          )}}
+        </div>
+      )}}
+      
+      {{/* Navigation - ONLY if data exists from Sanity */}}
+      {{data.mainNavigation && data.mainNavigation.length > 0 && (
+        <nav>
+          {{data.mainNavigation
+            .filter(item => getInternationalizedString(item.label)) // 🚨 Only show items with actual data
+            .map((item, index) => (
+            <Link 
+              key={{index}} 
+              href={{getInternationalizedString(item.link?.externalUrl) || '#'}}
+            >
+              {{getInternationalizedString(item.label)}}
+            </Link>
+          ))}}
+        </nav>
+      )}}
+      
+      {{/* CTA Button - ONLY if data exists from Sanity */}}
+      {{data.ctaButton && getInternationalizedString(data.ctaButton.label) && (
+        <button>
+          {{getInternationalizedString(data.ctaButton.label)}}
+        </button>
+      )}}
+    </header>
+  );
+}}
+```
+
+// FILEPATH: Footer.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import type {{ FooterData }} from './types';
+
+// Helper functions (same as above)
+const getInternationalizedString = (data: unknown): string => {{
+  // ... same implementation
+}};
+
+const getInternationalizedImage = (data: unknown): {{ url: string; altText?: string }} | null => {{
+  // ... same implementation
+}};
+
+interface FooterProps {{
+  data: FooterData;
+}}
+
+export default function Footer({{ data }}: FooterProps) {{
+  // 🚨 CRITICAL: If no data from Sanity, render NOTHING
+  if (!data) return null;
+  
+  return (
+    <footer>
+      {{/* Footer Logo - ONLY if data exists from Sanity */}}
+      {{data.logo && getInternationalizedString(data.logo.name) && (
+        <div>
+          {{getInternationalizedImage(data.logo.logo) && (
+            <Image
+              src={{getInternationalizedImage(data.logo.logo)!.url}}
+              alt={{getInternationalizedString(data.logo.altText) || ''}}
+              width={{100}}
+              height={{50}}
+            />
+          )}}
+          {{/* Show logo name if no image */}}
+          {{!getInternationalizedImage(data.logo.logo) && (
+            <span>{{getInternationalizedString(data.logo.name)}}</span>
+          )}}
+        </div>
+      )}}
+      
+      {{/* Link Columns - ONLY if data exists from Sanity */}}
+      {{data.linkColumns && data.linkColumns.length > 0 && (
+        <div>
+          {{data.linkColumns
+            .filter(column => getInternationalizedString(column.title)) // 🚨 Only show columns with actual data
+            .map((column, index) => (
+            <div key={{index}}>
+              {{getInternationalizedString(column.title) && (
+                <h3>{{getInternationalizedString(column.title)}}</h3>
+              )}}
+              {{column.links && column.links.length > 0 && (
+                <ul>
+                  {{column.links
+                    .filter(link => getInternationalizedString(link.label)) // 🚨 Only show links with actual data
+                    .map((link, linkIndex) => (
+                    <li key={{linkIndex}}>
+                      <Link href={{getInternationalizedString(link.link?.externalUrl) || '#'}}>
+                        {{getInternationalizedString(link.label)}}
+                      </Link>
+                    </li>
+                  ))}}
+                </ul>
+              )}}
+            </div>
+          ))}}
+        </div>
+      )}}
+      
+      {{/* Copyright - ONLY if data exists from Sanity */}}
+      {{data.copyrightText && getInternationalizedString(data.copyrightText) && (
+        <p>{{getInternationalizedString(data.copyrightText)}}</p>
+      )}}
+    </footer>
+  );
+}}
 ```
 
 // FILEPATH: page.tsx
@@ -396,21 +735,27 @@ CRITICAL REQUIREMENTS:
 2. Next.js 15+ requires: `params: Promise<{{ slug: string }}>` and `await params`
 3. Configure next.config.ts with Sanity CDN domain
 4. Install required dependencies: @portabletext/react @portabletext/types
-5. Use proper PortableText rendering throughout
-6. Handle missing data gracefully with fallbacks
-7. Use proper TypeScript types
-8. Test all generated queries for syntax errors
+5. Use proper internationalized array handling throughout
+6. 🚨 **NO static content** - everything must come from Sanity data
+7. 🚨 **NO placeholder text** - use conditional rendering instead
+8. 🚨 **NO hardcoded navigation** - no "Home", "About", "Contact" links
+9. 🚨 **NO fallback logos** - if no logo from Sanity, show nothing
+10. 🚨 **NO default copyright text** - only show if data exists in Sanity
+11. 🚨 **Header/Footer must be 100% data-driven** - if no data, render nothing
+12. Use proper TypeScript types
+13. Test all generated queries for syntax errors
 
 ⚠️ FORMATTING REQUIREMENTS - ESSENTIAL:
 1. Start each code block with: // FILEPATH: [filename]
 2. Follow immediately with: ```typescript or ```tsx
 3. End each code block with: ```
 4. NO extra text between FILEPATH and code block
-5. Provide exactly 4 code blocks (types.ts, query.ts, component.tsx, page.tsx)
+5. Provide exactly 6 code blocks (types.ts, query.ts, component.tsx, Header.tsx, Footer.tsx, page.tsx)
 
 🚨 CRITICAL GROQ SYNTAX RULES:
 - ❌ NEVER use: `field[0].value` or `field[0].value.asset->` (INVALID GROQ!)
-- ✅ ALWAYS use: `field` for internationalized text and `field {{ asset->{{url, altText}} }}` for images
+- ✅ ALWAYS use: `field` for internationalized text and `field {{ value {{ asset->{{url, altText}} }} }}` for images
+- ✅ ALWAYS use: `slug[0].value.current == $slug` for filtering (slug IS internationalized)
 - The validation will REJECT queries with [0].value patterns!
 
 **Example of correct format:**
@@ -423,7 +768,26 @@ CRITICAL REQUIREMENTS:
 ```typescript
 [your code here - with CORRECT GROQ syntax!]
 ```
-[continue for all 4 files...]
+
+// FILEPATH: component.tsx
+```tsx
+[your main component code here]
+```
+
+// FILEPATH: Header.tsx
+```tsx
+[your header component code here]
+```
+
+// FILEPATH: Footer.tsx
+```tsx
+[your footer component code here]
+```
+
+// FILEPATH: page.tsx
+```tsx
+[your page component code here]
+```
 """
 
 
@@ -475,7 +839,7 @@ def validate_groq_syntax(content: str) -> tuple[bool, str]:
     invalid_asset_pattern = re.compile(r"\w+\[0\]\.value\.asset->", re.MULTILINE)
     if invalid_asset_pattern.search(content):
         errors.append(
-            "❌ Found 'field[0].value.asset->' - Invalid GROQ syntax! Use 'field { asset->{url, altText} }' instead"
+            "❌ Found 'field[0].value.asset->' - Invalid GROQ syntax! Use 'field { value { asset->{url, altText} } }' instead"
         )
 
     # Pattern 3: Check for any [n].value patterns (common mistake)
@@ -497,8 +861,8 @@ def validate_groq_syntax(content: str) -> tuple[bool, str]:
             f"❌ Mismatched braces: {open_braces} opening, {close_braces} closing"
         )
 
-    # Check for slug syntax
-    if "slug.current ==" in content and "internationalizedArray" in content:
+    # Check for slug syntax - CORRECTED for internationalized arrays
+    if "slug.current ==" in content and "slug[0].value.current" not in content:
         errors.append(
             "❌ Found 'slug.current' but schema uses internationalized arrays - use 'slug[0].value.current'"
         )
@@ -508,6 +872,27 @@ def validate_groq_syntax(content: str) -> tuple[bool, str]:
         errors.append(
             "❌ Found 'slug[].value.current' - should be 'slug[0].value.current' for filtering"
         )
+
+    # Check for correct internationalized image syntax
+    if "image {" in content and "value {" not in content:
+        errors.append(
+            "❌ Found 'image {' but missing 'value {' - use 'image { value { asset->{url, altText} } }'"
+        )
+
+    # Check for correct internationalized field projections
+    internationalized_fields = [
+        "title",
+        "description",
+        "headline",
+        "tagline",
+        "name",
+        "label",
+    ]
+    for field in internationalized_fields:
+        if f"{field}[0].value" in content:
+            errors.append(
+                f"❌ Found '{field}[0].value' - should be just '{field}' for internationalized arrays"
+            )
 
     return len(errors) == 0, "\n".join(errors)
 
@@ -525,6 +910,35 @@ def validate_nextjs_params(content: str) -> tuple[bool, str]:
     if "const { slug } = params;" in content:
         errors.append(
             "❌ Found synchronous params access - use 'const {slug} = await params;'"
+        )
+
+    return len(errors) == 0, "\n".join(errors)
+
+
+def validate_header_footer_content(content: str) -> tuple[bool, str]:
+    """Validate Header and Footer components for static content."""
+    errors = []
+
+    # Check for hardcoded navigation items
+    hardcoded_nav = ["Home", "About", "Contact", "Services", "Products", "Blog"]
+    for nav_item in hardcoded_nav:
+        if f'"{nav_item}"' in content or f"'{nav_item}'" in content:
+            errors.append(
+                f"❌ Found hardcoded navigation item '{nav_item}' - use only Sanity data"
+            )
+
+    # Check for hardcoded copyright text
+    if "© 2024" in content or "All rights reserved" in content:
+        errors.append("❌ Found hardcoded copyright text - use only Sanity data")
+
+    # Check for hardcoded logo text
+    if '"Logo"' in content or "'Logo'" in content:
+        errors.append("❌ Found hardcoded logo text - use only Sanity data")
+
+    # Check for fallback content
+    if "|| 'Home'" in content or "|| 'About'" in content:
+        errors.append(
+            "❌ Found fallback static content - use conditional rendering instead"
         )
 
     return len(errors) == 0, "\n".join(errors)
@@ -691,6 +1105,13 @@ def parse_and_create_files(
                     f"Next.js Validation in {filename}:\n{error_msg}"
                 )
 
+        if filename in ["Header.tsx", "Footer.tsx"]:
+            is_valid, error_msg = validate_header_footer_content(content)
+            if not is_valid:
+                validation_errors.append(
+                    f"Header/Footer Validation in {filename}:\n{error_msg}"
+                )
+
         if filename == "page.tsx":
             file_path = page_dir / filename
         else:
@@ -707,8 +1128,10 @@ def parse_and_create_files(
             print_info(error)
         print_info("Files created but may need manual fixes.")
 
-    if len(files_created) < 4:
-        print_info(f"⚠️  Expected 4 code blocks, but only found {len(files_created)}.")
+    if len(files_created) < 6:
+        print_info(
+            f"⚠️  Expected 6 code blocks (types.ts, query.ts, component.tsx, Header.tsx, Footer.tsx, page.tsx), but only found {len(files_created)}."
+        )
         print_info(
             "This might be normal if the AI provided a different number of files."
         )
@@ -737,8 +1160,56 @@ export type PageData = {{
   content?: PortableTextContent;
 }};
 
+export type HeaderData = {{
+  _id: string;
+  logo?: {{
+    _ref: string;
+    name?: InternationalizedString[];
+    logo?: InternationalizedImage[];
+  }};
+  mainNavigation?: Array<{{
+    _key: string;
+    label?: InternationalizedString[];
+    link?: {{
+      internalLink?: {{ slug?: InternationalizedString[] }};
+      externalUrl?: InternationalizedString[];
+    }};
+  }}>;
+  ctaButton?: {{
+    label?: InternationalizedString[];
+    link?: {{
+      internalLink?: {{ slug?: InternationalizedString[] }};
+      externalUrl?: InternationalizedString[];
+    }};
+  }};
+}};
+
+export type FooterData = {{
+  _id: string;
+  linkColumns?: Array<{{
+    _key: string;
+    title?: InternationalizedString[];
+    links?: Array<{{
+      _key: string;
+      label?: InternationalizedString[];
+      link?: {{
+        internalLink?: {{ slug?: InternationalizedString[] }};
+        externalUrl?: InternationalizedString[];
+      }};
+    }}>;
+  }}>;
+  logo?: {{
+    _ref: string;
+    name?: InternationalizedString[];
+    logo?: InternationalizedImage[];
+  }};
+  copyrightText?: InternationalizedString[];
+}};
+
 export type {component_name}Data = {{
   page: PageData;
+  header: HeaderData;
+  footer: FooterData;
   siteSettings: {{
     siteName?: string;
     siteDescription?: string;
@@ -752,11 +1223,55 @@ import {{ groq }} from 'next-sanity';
 
 export const get{component_name}DataQuery = groq`
   {{
-    "page": *[_type == "page" && slug.current == $slug][0] {{
+    "page": *[_type == "page" && slug[0].value.current == $slug][0] {{
       _id,
       title,
-      slug {{ current }},
+      slug,
       content
+    }},
+    "header": *[_type == "header"][0] {{
+      _id,
+      logo {{
+        _ref,
+        name,
+        logo {{ value {{ asset->{{url, altText}} }} }}
+      }},
+      mainNavigation[] {{
+        _key,
+        label,
+        link {{
+          internalLink->{{ slug }},
+          externalUrl
+        }}
+      }},
+      ctaButton {{
+        label,
+        link {{
+          internalLink->{{ slug }},
+          externalUrl
+        }}
+      }}
+    }},
+    "footer": *[_type == "footer"][0] {{
+      _id,
+      linkColumns[] {{
+        _key,
+        title,
+        links[] {{
+          _key,
+          label,
+          link {{
+            internalLink->{{ slug }},
+            externalUrl
+          }}
+        }}
+      }},
+      logo {{
+        _ref,
+        name,
+        logo {{ value {{ asset->{{url, altText}} }} }}
+      }},
+      copyrightText
     }},
     "siteSettings": *[_type == "siteSettings"][0] {{
       siteName,
@@ -780,12 +1295,159 @@ interface Props {{
 
 export default function {component_name}({{ data }}: Props) {{
   return (
-    <main>
-      <h1>{{data.page?.title || 'Untitled'}}</h1>
-      {{data.page?.content && (
-        <PortableText value={{data.page.content}} />
+    <>
+      {{/* Global Header */}}
+      {{data.header && <Header data={{data.header}} />}}
+      
+      <main>
+        {{data.page?.title && (
+          <h1>{{getInternationalizedString(data.page.title)}}</h1>
+        )}}
+        {{data.page?.content && (
+          <PortableText value={{data.page.content}} />
+        )}}
+      </main>
+      
+      {{/* Global Footer */}}
+      {{data.footer && <Footer data={{data.footer}} />}}
+    </>
+  );
+}}
+```
+
+// FILEPATH: Header.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import type {{ HeaderData }} from './types';
+
+// Helper functions (same as above)
+const getInternationalizedString = (data: unknown): string => {{
+  if (!data) return "";
+  if (Array.isArray(data) && data.length > 0) {{
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem !== null && 'value' in firstItem) {{
+      const typedItem = firstItem as {{ value?: string }};
+      return typedItem.value || "";
+    }}
+  }}
+  if (typeof data === 'string') {{
+    return data;
+  }}
+  return "";
+}};
+
+interface HeaderProps {{
+  data: HeaderData;
+}}
+
+export default function Header({{ data }}: HeaderProps) {{
+  // 🚨 CRITICAL: If no data from Sanity, render NOTHING
+  if (!data) return null;
+  
+  return (
+    <header>
+      {{/* Logo - ONLY if data exists from Sanity */}}
+      {{data.logo && getInternationalizedString(data.logo.name) && (
+        <div>
+          <h1>{{getInternationalizedString(data.logo.name)}}</h1>
+        </div>
       )}}
-    </main>
+      
+      {{/* Navigation - ONLY if data exists from Sanity */}}
+      {{data.mainNavigation && data.mainNavigation.length > 0 && (
+        <nav>
+          {{data.mainNavigation
+            .filter(item => getInternationalizedString(item.label)) // 🚨 Only show items with actual data
+            .map((item, index) => (
+            <Link key={{index}} href={{getInternationalizedString(item.link?.externalUrl) || '#'}}>
+              {{getInternationalizedString(item.label)}}
+            </Link>
+          ))}}
+        </nav>
+      )}}
+      
+      {{/* CTA Button - ONLY if data exists from Sanity */}}
+      {{data.ctaButton && getInternationalizedString(data.ctaButton.label) && (
+        <button>
+          {{getInternationalizedString(data.ctaButton.label)}}
+        </button>
+      )}}
+    </header>
+  );
+}}
+```
+
+// FILEPATH: Footer.tsx
+```tsx
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import type {{ FooterData }} from './types';
+
+// Helper functions (same as above)
+const getInternationalizedString = (data: unknown): string => {{
+  if (!data) return "";
+  if (Array.isArray(data) && data.length > 0) {{
+    const firstItem = data[0];
+    if (firstItem && typeof firstItem === 'object' && firstItem !== null && 'value' in firstItem) {{
+      const typedItem = firstItem as {{ value?: string }};
+      return typedItem.value || "";
+    }}
+  }}
+  if (typeof data === 'string') {{
+    return data;
+  }}
+  return "";
+}};
+
+interface FooterProps {{
+  data: FooterData;
+}}
+
+export default function Footer({{ data }}: FooterProps) {{
+  // 🚨 CRITICAL: If no data from Sanity, render NOTHING
+  if (!data) return null;
+  
+  return (
+    <footer>
+      {{/* Link Columns - ONLY if data exists from Sanity */}}
+      {{data.linkColumns && data.linkColumns.length > 0 && (
+        <div>
+          {{data.linkColumns
+            .filter(column => getInternationalizedString(column.title)) // 🚨 Only show columns with actual data
+            .map((column, index) => (
+            <div key={{index}}>
+              {{getInternationalizedString(column.title) && (
+                <h3>{{getInternationalizedString(column.title)}}</h3>
+              )}}
+              {{column.links && column.links.length > 0 && (
+                <ul>
+                  {{column.links
+                    .filter(link => getInternationalizedString(link.label)) // 🚨 Only show links with actual data
+                    .map((link, linkIndex) => (
+                    <li key={{linkIndex}}>
+                      <Link href={{getInternationalizedString(link.link?.externalUrl) || '#'}}>
+                        {{getInternationalizedString(link.label)}}
+                      </Link>
+                    </li>
+                  ))}}
+                </ul>
+              )}}
+            </div>
+          ))}}
+        </div>
+      )}}
+      
+      {{/* Copyright - ONLY if data exists from Sanity */}}
+      {{data.copyrightText && getInternationalizedString(data.copyrightText) && (
+        <p>{{getInternationalizedString(data.copyrightText)}}</p>
+      )}}
+    </footer>
   );
 }}
 ```
@@ -842,29 +1504,46 @@ const client = createClient({
 async function analyzeSchema() {
   console.log('🔍 Analyzing schema structure...');
   
-  // Check a sample page to understand structure
-  const samplePage = await client.fetch(`*[_type == "page"][0] {
-    title,
-    slug,
-    "titleType": title._type,
-    "slugType": slug._type
-  }`);
-  
-  console.log('📄 Sample page structure:');
-  console.log(JSON.stringify(samplePage, null, 2));
-  
-  // Determine if using internationalized arrays
-  const isInternationalized = samplePage?.title?._type || 
-    (Array.isArray(samplePage?.title) && samplePage.title[0]?._type?.includes('internationalized'));
-  
-  console.log('\\n🌐 Schema type:', isInternationalized ? 'INTERNATIONALIZED ARRAYS' : 'STANDARD FIELDS');
-  
-  if (isInternationalized) {
-    console.log('✅ Use: slug[0].value.current for filtering');
-    console.log('✅ Use: getInternationalizedString() helpers in components');
-  } else {
-    console.log('✅ Use: slug.current for filtering');
-    console.log('✅ Use: PortableText components for rich text');
+  try {
+    // Check a sample page to understand structure
+    const samplePage = await client.fetch(`*[_type == "page"][0] {
+      title,
+      slug,
+      "titleType": title._type,
+      "slugType": slug._type,
+      "titleIsArray": title[0]._type,
+      "slugIsArray": slug[0]._type
+    }`);
+    
+    console.log('📄 Sample page structure:');
+    console.log(JSON.stringify(samplePage, null, 2));
+    
+    // Determine if using internationalized arrays
+    const isInternationalized = Array.isArray(samplePage?.title) && 
+      samplePage.title[0]?._type?.includes('internationalized');
+    
+    console.log('\\n🌐 Schema type:', isInternationalized ? 'INTERNATIONALIZED ARRAYS' : 'STANDARD FIELDS');
+    
+    if (isInternationalized) {
+      console.log('✅ Use: slug[0].value.current for filtering');
+      console.log('✅ Use: getInternationalizedString() helpers in components');
+      console.log('✅ Use: field { value { asset->{url, altText} } } for images');
+      console.log('✅ Use: just "field" for text fields in GROQ');
+    } else {
+      console.log('✅ Use: slug.current for filtering');
+      console.log('✅ Use: PortableText components for rich text');
+    }
+    
+    // Test a simple query
+    console.log('\\n🧪 Testing GROQ query...');
+    const testQuery = isInternationalized 
+      ? `*[_type == "page" && slug[0].value.current == "test"][0] { title, slug }`
+      : `*[_type == "page" && slug.current == "test"][0] { title, slug }`;
+    
+    console.log('Test query:', testQuery);
+    
+  } catch (error) {
+    console.error('❌ Error analyzing schema:', error);
   }
 }
 
@@ -877,6 +1556,70 @@ analyzeSchema().catch(console.error);
     print_info(
         "Created analyze-schema.js - run this to understand your schema structure"
     )
+
+
+def create_groq_test_script():
+    """Create a script to test GROQ queries."""
+    test_script = """
+const { createClient } = require('next-sanity');
+require('dotenv').config({ path: '.env.local' });
+
+const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  apiVersion: '2023-03-01',
+  useCdn: false,
+});
+
+async function testGroqQueries() {
+  console.log('🧪 Testing GROQ queries for internationalized arrays...');
+  
+  const queries = [
+    {
+      name: 'Page with internationalized fields',
+      query: `*[_type == "page"][0] {
+        _id,
+        title,
+        slug,
+        pageBuilder[] {
+          _key,
+          _type,
+          _type == "herosection" => {
+            headline,
+            tagline,
+            image { value { asset->{url, altText} } }
+          }
+        }
+      }`
+    },
+    {
+      name: 'Site settings',
+      query: `*[_type == "siteSettings"][0] {
+        siteName,
+        siteDescription
+      }`
+    }
+  ];
+  
+  for (const { name, query } of queries) {
+    try {
+      console.log(`\\n📋 Testing: ${name}`);
+      console.log('Query:', query);
+      const result = await client.fetch(query);
+      console.log('✅ Result:', JSON.stringify(result, null, 2));
+    } catch (error) {
+      console.error(`❌ Error in ${name}:`, error.message);
+    }
+  }
+}
+
+testGroqQueries().catch(console.error);
+"""
+
+    with open("test-groq.js", "w", encoding="utf-8") as f:
+        f.write(test_script.strip())
+
+    print_info("Created test-groq.js - run this to test GROQ queries")
 
 
 def setup_project_dependencies():
@@ -973,8 +1716,9 @@ def main():
     # 0. Setup project dependencies and configuration
     setup_project_dependencies()
 
-    # 0.5. Create schema analysis tool
+    # 0.5. Create schema analysis tools
     create_schema_debug_script()
+    create_groq_test_script()
 
     # 1. Analyze all available Sanity schemas
     all_schemas = get_all_sanity_schemas_as_json()
@@ -1033,8 +1777,16 @@ def main():
         f"   - Use sample_ai_response_{component_name.lower()}.txt as a format reference"
     )
     print(f"   - Run analyze-schema.js to understand your data structure")
+    print(f"   - Run test-groq.js to test GROQ queries before using them")
+    print(f"   - Run create-sample-data.js to populate your dataset with test data")
     print(
-        "   - The script has automatically configured your project for PortableText and Sanity images!"
+        "   - The script has automatically configured your project for internationalized arrays and Sanity images!"
+    )
+    print(
+        "\n🚨 **Important**: The generated UI components contain NO static content - everything comes from your Sanity data!"
+    )
+    print(
+        "🌐 **Global Components**: Header and Footer are generated as separate components and included in all pages!"
     )
 
 
