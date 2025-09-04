@@ -597,7 +597,6 @@ class AIArchitect:
         return ChatGoogleGenerativeAI(
             model=self.config.ai.model_name,
             google_api_key=self.config.ai.api_key,
-            convert_system_message_to_human=True,  # For models that don't support system messages
         )
 
     def _create_phase_one_chain(self):
