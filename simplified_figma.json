@@ -1,0 +1,1820 @@
+{
+  "name": "Landing page",
+  "type": "FRAME",
+  "children": [
+    {
+      "name": "NavBar",
+      "type": "INSTANCE",
+      "children": [
+        {
+          "name": "Logo",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Pinnacle",
+              "type": "GROUP"
+            }
+          ]
+        },
+        {
+          "name": "Buttons Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Primary button",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Text",
+                  "type": "TEXT",
+                  "content": "Home"
+                }
+              ]
+            },
+            {
+              "name": "Text Button",
+              "type": "TEXT",
+              "content": "About Us"
+            },
+            {
+              "name": "Text Button",
+              "type": "TEXT",
+              "content": "Projects"
+            },
+            {
+              "name": "Text Button",
+              "type": "TEXT",
+              "content": "Services"
+            },
+            {
+              "name": "Text Button",
+              "type": "TEXT",
+              "content": "News"
+            }
+          ]
+        },
+        {
+          "name": "Primary button",
+          "type": "INSTANCE",
+          "children": [
+            {
+              "name": "Text",
+              "type": "TEXT",
+              "content": "Contact us"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hero section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Content",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Text",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Hero title",
+                  "type": "TEXT",
+                  "content": "Creating a Better Tomorrow, One Home at a Time"
+                },
+                {
+                  "name": "Hero description",
+                  "type": "TEXT",
+                  "content": "We've built a reputation for delivering exceptional results and exceeding our clients' expectations. From luxurious residential homes to state-of-the-art commercial properties, our team of experts is dedicated to bringing your vision to life."
+                }
+              ]
+            },
+            {
+              "name": "Buttons",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Primary button",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "Schedule a Call"
+                    }
+                  ]
+                },
+                {
+                  "name": "Secondary button",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "View Our Projucts"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Hero right image",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Hero image",
+              "type": "IMAGE"
+            },
+            {
+              "name": "Review",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "james",
+                  "type": "IMAGE"
+                },
+                {
+                  "name": "Review content",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Review content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Reviewer info",
+                          "type": "TEXT",
+                          "content": "James | CEO of Crazy Bank"
+                        },
+                        {
+                          "name": "Review text",
+                          "type": "TEXT",
+                          "content": "Pinnacle is my GO-TO when it comes to real estate"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Review",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Amanda Actor",
+                  "type": "IMAGE"
+                },
+                {
+                  "name": "Review content",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Review content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Reviewer info",
+                          "type": "TEXT",
+                          "content": "Amanda | Actor"
+                        },
+                        {
+                          "name": "Review text",
+                          "type": "TEXT",
+                          "content": "I highly recommend, My home exactly what I wanted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "About section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Content wrapper",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Inner Content",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Title content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Title",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Title row",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "Title part",
+                                  "type": "TEXT",
+                                  "content": "We're"
+                                },
+                                {
+                                  "name": "Shape",
+                                  "type": "RECTANGLE"
+                                },
+                                {
+                                  "name": "Title part",
+                                  "type": "TEXT",
+                                  "content": " building "
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Title part",
+                              "type": "TEXT",
+                              "content": "communities."
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Paragraph",
+                          "type": "TEXT",
+                          "content": "With a commitment to excellence and a focus on innovation, we've established ourselves as a leader in the real estate and construction industry."
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Link",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Tertiary button",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "Learn More About Us..."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Ratings",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Client Images",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Ellipse 10",
+                          "type": "IMAGE"
+                        },
+                        {
+                          "name": "Ellipse 11",
+                          "type": "IMAGE"
+                        },
+                        {
+                          "name": "Ellipse 12",
+                          "type": "IMAGE"
+                        },
+                        {
+                          "name": "Ellipse 13",
+                          "type": "IMAGE"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Ratings rate",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Rating text",
+                          "type": "TEXT",
+                          "content": "4.3/5 Rated by 300+ Professionals"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Right background image",
+              "type": "IMAGE"
+            },
+            {
+              "name": "Left background image",
+              "type": "IMAGE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Featured section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Content",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Title row",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Section title",
+                      "type": "TEXT",
+                      "content": "Featured Projects"
+                    }
+                  ]
+                },
+                {
+                  "name": "Section description",
+                  "type": "TEXT",
+                  "content": "we've built a reputation for delivering exceptional results and exceeding our clients' expectations. From luxurious residential homes to state-of-the-art commercial properties, our team of experts is dedicated to bringing your vision to life."
+                }
+              ]
+            },
+            {
+              "name": "Tertiary button",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Text",
+                  "type": "TEXT",
+                  "content": "View all Projects"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Content",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Properties",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Property card",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Card-image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Card Details",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Title",
+                              "type": "TEXT",
+                              "content": "The Grand Estate"
+                            },
+                            {
+                              "name": "description",
+                              "type": "TEXT",
+                              "content": "The Grand Estate is a luxurious residential development featuring 12 bespoke homes, each with its own unique design and amenities"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Details",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Location",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "Location",
+                                  "type": "FRAME"
+                                },
+                                {
+                                  "name": "Upper Macungie Township, PA",
+                                  "type": "TEXT",
+                                  "content": "Upper Macungie Township, PA"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Tags",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "button",
+                                  "type": "INSTANCE",
+                                  "children": [
+                                    {
+                                      "name": "Text",
+                                      "type": "TEXT",
+                                      "content": "Movie theater"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Primary button",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "View Property"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Property card",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Card-image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Card Details",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Title",
+                              "type": "TEXT",
+                              "content": "The Business Hub"
+                            },
+                            {
+                              "name": "description",
+                              "type": "TEXT",
+                              "content": "The Business Hub is a state-of-the-art commercial office space designed to meet the needs of modern businesses."
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Details",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Location",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "Location",
+                                  "type": "FRAME"
+                                },
+                                {
+                                  "name": "Upper Macungie Township, PA",
+                                  "type": "TEXT",
+                                  "content": "Upper Macungie Township, PA"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Tags",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "button",
+                                  "type": "INSTANCE",
+                                  "children": [
+                                    {
+                                      "name": "Text",
+                                      "type": "TEXT",
+                                      "content": "High-speed Wi-Fi"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Primary button",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "View Property"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Property card",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Card-image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Card Details",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Title",
+                              "type": "TEXT",
+                              "content": "The Village"
+                            },
+                            {
+                              "name": "description",
+                              "type": "TEXT",
+                              "content": "The Village is a community development featuring a mix of residential and commercial spaces, designed to create a vibrant and sustainable community."
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Details",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Location",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "Location",
+                                  "type": "FRAME"
+                                },
+                                {
+                                  "name": "Upper Macungie Township, PA",
+                                  "type": "TEXT",
+                                  "content": "Upper Macungie Township, PA"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Tags",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "button",
+                                  "type": "INSTANCE",
+                                  "children": [
+                                    {
+                                      "name": "Text",
+                                      "type": "TEXT",
+                                      "content": "Green spaces"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Primary button",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "View Property"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Pagination text",
+                  "type": "TEXT",
+                  "content": "01/03"
+                },
+                {
+                  "name": "Buttons Container",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Arrow icon",
+                          "type": "FRAME"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Arrow icon",
+                          "type": "FRAME"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Quality Services section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Content",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Title row",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Section title",
+                      "type": "TEXT",
+                      "content": "Quality service you get"
+                    }
+                  ]
+                },
+                {
+                  "name": "Section description",
+                  "type": "TEXT",
+                  "content": "At Pinnacle, we offer a wide range of services to cater to your unique needs. From residential construction to commercial development, we've got you covered."
+                }
+              ]
+            },
+            {
+              "name": "Tabs",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Tertiary button",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "Residential"
+                    }
+                  ]
+                },
+                {
+                  "name": "Tertiary button",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "Property Management"
+                    }
+                  ]
+                },
+                {
+                  "name": "Tertiary button",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "Commercial"
+                    }
+                  ]
+                },
+                {
+                  "name": "Tertiary button",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "Development"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Service card",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Card-image",
+                  "type": "IMAGE"
+                },
+                {
+                  "name": "Card Details",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Heading and Supporting text",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Title",
+                          "type": "TEXT",
+                          "content": "Custom Homes"
+                        },
+                        {
+                          "name": "supporting text",
+                          "type": "TEXT",
+                          "content": "We design and build custom homes that reflect your personal style and meet your specific needs."
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "button_base",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "Learn more..."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Service card",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Card-image",
+                  "type": "IMAGE"
+                },
+                {
+                  "name": "Card Details",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Heading and Supporting text",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Title",
+                          "type": "TEXT",
+                          "content": "Community Dev"
+                        },
+                        {
+                          "name": "supporting text",
+                          "type": "TEXT",
+                          "content": "We develop and manage community projects, including single-family homes, townhomes, and condominiums."
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "button_base",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "Learn more..."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Service card",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Card-image",
+                  "type": "IMAGE"
+                },
+                {
+                  "name": "Card Detailes",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Heading and Supporting text",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Title",
+                          "type": "TEXT",
+                          "content": "Renovations"
+                        },
+                        {
+                          "name": "supporting text",
+                          "type": "TEXT",
+                          "content": "We specialize in residential renovations, from minor updates to major overhauls."
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "button_base",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "Learn more..."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Client section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Heading",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Title row",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Section title",
+                      "type": "TEXT",
+                      "content": "What Our Clients Say"
+                    }
+                  ]
+                },
+                {
+                  "name": "Section description",
+                  "type": "TEXT",
+                  "content": "At Pinnacle, we're not just building structures - we're building relationships. Here's what some of our satisfied clients have to say about their experience with us."
+                }
+              ]
+            },
+            {
+              "name": "Ratings",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Client Images",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Ellipse 10",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Ellipse 11",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Ellipse 12",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Ellipse 13",
+                      "type": "IMAGE"
+                    }
+                  ]
+                },
+                {
+                  "name": "Ratings rate",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Rating text",
+                      "type": "TEXT",
+                      "content": "4.3/5 Rated by 300+ Professionals"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Testimonial",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Card",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Reviewer image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Supporting text",
+                              "type": "TEXT",
+                              "content": "\"Pinnacle's attention to detail and commitment to excellence is unparalleled. Their team is professional, courteous, and always willing to go the extra mile.\""
+                            },
+                            {
+                              "name": "Reviewer info",
+                              "type": "TEXT",
+                              "content": "-\u00a0Emily J. Smith, Owner, Smith & Co."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Card",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Reviewer image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Supporting text",
+                              "type": "TEXT",
+                              "content": "\"I was blown away by the quality of work and the level of service provided by Pinnacle. They truly understand the importance of delivering exceptional results.\""
+                            },
+                            {
+                              "name": "Reviewer info",
+                              "type": "TEXT",
+                              "content": "-\u00a0David L. Lee, CEO, Lee Enterprises"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Card",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Reviewer image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Supporting text",
+                              "type": "TEXT",
+                              "content": "\"I was blown away by the quality of work and the level of service provided by Pinnacle. They truly understand the importance of delivering exceptional results.\""
+                            },
+                            {
+                              "name": "Reviewer info",
+                              "type": "TEXT",
+                              "content": "-\u00a0Emily J. Smith, Owner, Smith & Co."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Card",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Reviewer image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Content",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Text",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Supporting text",
+                              "type": "TEXT",
+                              "content": "\"Pinnacle's ability to balance budget, schedule, and quality is impressive. They're a true partner in the construction process.\"\u00a0"
+                            },
+                            {
+                              "name": "Reviewer info",
+                              "type": "TEXT",
+                              "content": "\u00a0-\u00a0Sarah K. Johnson, Project Manager, Johnson Co"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blog posts section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Heading",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Content",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Title row",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Section title",
+                      "type": "TEXT",
+                      "content": "Latest News"
+                    }
+                  ]
+                },
+                {
+                  "name": "Section description",
+                  "type": "TEXT",
+                  "content": "We've built a reputation for delivering exceptional results and exceeding our clients' expectations. From luxurious residential homes to state-of-the-art commercial properties, our team of experts is dedicated to bringing your vision to life."
+                }
+              ]
+            },
+            {
+              "name": "Tertiary button",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Text",
+                  "type": "TEXT",
+                  "content": "View all blog post"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Blog posts container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Blog post card",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Card-image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Heading and Supporting text",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "button",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "Home Improvement"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Heading ",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Title",
+                              "type": "TEXT",
+                              "content": "5 Ways to Increase Your Home's Value"
+                            },
+                            {
+                              "name": "Lorem ipsum dolor sit amet consectetur.",
+                              "type": "TEXT",
+                              "content": "Lorem ipsum dolor sit amet consectetur."
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Content",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Date",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "uil-calendar-alt",
+                                  "type": "FRAME"
+                                },
+                                {
+                                  "name": "May 10, 2022",
+                                  "type": "TEXT",
+                                  "content": "May 10, 2022"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "button",
+                              "type": "INSTANCE",
+                              "children": [
+                                {
+                                  "name": "Text",
+                                  "type": "TEXT",
+                                  "content": "Read More..."
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Blog post card",
+                  "type": "INSTANCE",
+                  "children": [
+                    {
+                      "name": "Card-image",
+                      "type": "IMAGE"
+                    },
+                    {
+                      "name": "Heading and Supporting text",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "button",
+                          "type": "INSTANCE",
+                          "children": [
+                            {
+                              "name": "Text",
+                              "type": "TEXT",
+                              "content": "Planning"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Heading",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Title",
+                              "type": "TEXT",
+                              "content": "How to Plan Your Dream Home"
+                            },
+                            {
+                              "name": "Lorem ipsum dolor sit amet consectetur.",
+                              "type": "TEXT",
+                              "content": "Lorem ipsum dolor sit amet consectetur."
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Content",
+                          "type": "FRAME",
+                          "children": [
+                            {
+                              "name": "Date",
+                              "type": "FRAME",
+                              "children": [
+                                {
+                                  "name": "uil-calendar-alt",
+                                  "type": "FRAME"
+                                },
+                                {
+                                  "name": "May 10, 2022",
+                                  "type": "TEXT",
+                                  "content": "Jan 15, 2023"
+                                }
+                              ]
+                            },
+                            {
+                              "name": " button",
+                              "type": "INSTANCE",
+                              "children": [
+                                {
+                                  "name": "Text",
+                                  "type": "TEXT",
+                                  "content": "Read More..."
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Pagination text",
+                  "type": "TEXT",
+                  "content": "01/03"
+                },
+                {
+                  "name": "Buttons Container",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Arrow icon",
+                          "type": "FRAME"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Button",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Arrow icon",
+                          "type": "FRAME"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "FAQ section",
+      "type": "FRAME",
+      "children": [
+        {
+          "name": "Heading text",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Title row",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Section title",
+                  "type": "TEXT",
+                  "content": "Frequently Asked Questions"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Wrapper",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Question",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Question title",
+                      "type": "TEXT",
+                      "content": "How long has Pinnacle been in business?"
+                    },
+                    {
+                      "name": "Question text",
+                      "type": "TEXT",
+                      "content": "Pinnacle was founded in 2005, and we've been proudly serving the Mayobe area for over 15 years. During that time, we've established ourselves as a trusted leader in the construction and real estate industry, completing a wide range of projects and earning a reputation for excellence."
+                    }
+                  ]
+                },
+                {
+                  "name": "Question",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Question title",
+                      "type": "TEXT",
+                      "content": "What types of services does Pinnacle offer?"
+                    },
+                    {
+                      "name": "Question text",
+                      "type": "TEXT",
+                      "content": "At Pinnacle, we offer a comprehensive suite of services to meet the diverse needs of our clients. Our core offerings include residential construction, commercial construction, property management, and development services. Whether you're looking to build a custom home, renovate an existing property, or manage a commercial portfolio, our team of experts has the skills and experience to get the job done right."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Container",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Question",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Question title",
+                      "type": "TEXT",
+                      "content": "How does Pinnacle ensure the quality of its work?"
+                    },
+                    {
+                      "name": "Question text",
+                      "type": "TEXT",
+                      "content": "Quality is at the heart of everything we do at Pinnacle. We have a rigorous quality control process that involves regular inspections, testing, and oversight throughout the entire construction process. Additionally, our team of experienced professionals is committed to using only the highest-quality materials and adhering to the strictest industry standards. We stand behind our work with a comprehensive warranty, giving our clients the peace of mind they deserve."
+                    }
+                  ]
+                },
+                {
+                  "name": "Question",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Question title",
+                      "type": "TEXT",
+                      "content": "What is Pinnacle's approach to sustainability?"
+                    },
+                    {
+                      "name": "Question text",
+                      "type": "TEXT",
+                      "content": "Sustainability is a key priority for Pinnacle. We believe that building and managing properties in an environmentally responsible manner is not only good for the planet, but also benefits our clients in the long run. That's why we incorporate a range of sustainable practices into our projects, from energy-efficient design and construction to the use of renewable materials and technologies. Our goal is to create buildings and communities that are not only beautiful and functional, but also environmentally responsible."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Breakpoint",
+      "type": "INSTANCE",
+      "children": [
+        {
+          "name": "Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Title",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Let\u2019s",
+                  "type": "TEXT",
+                  "content": "Let\u2019s"
+                },
+                {
+                  "name": "Build",
+                  "type": "TEXT",
+                  "content": "Build"
+                },
+                {
+                  "name": "Something",
+                  "type": "TEXT",
+                  "content": "Something"
+                },
+                {
+                  "name": "Extraordinary",
+                  "type": "TEXT",
+                  "content": "Extraordinary"
+                },
+                {
+                  "name": "Together",
+                  "type": "TEXT",
+                  "content": "Together"
+                }
+              ]
+            },
+            {
+              "name": "button",
+              "type": "INSTANCE",
+              "children": [
+                {
+                  "name": "Text",
+                  "type": "TEXT",
+                  "content": "View our projects"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Breakpoint",
+      "type": "INSTANCE",
+      "children": [
+        {
+          "name": "Top Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Wrapper",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Logo",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Pinnacle",
+                      "type": "TEXT",
+                      "content": "Pinnacle"
+                    }
+                  ]
+                },
+                {
+                  "name": "Input Feild",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Mail-Send-Envelope--Streamline-Core.svg",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "mail-send-envelope--envelope-email-message-unopened-sealed-close",
+                          "type": "GROUP"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Text",
+                      "type": "TEXT",
+                      "content": "Enter Your Email"
+                    },
+                    {
+                      "name": "Send-Email--Streamline-Core.svg",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "send-email--mail-send-email-paper-airplane",
+                          "type": "GROUP"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Wrapper",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Column",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Navigation",
+                      "type": "TEXT",
+                      "content": "Navigation"
+                    },
+                    {
+                      "name": "Link Container",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Home"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Properties"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Testimonials"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "FAQ\u2019s"
+                        },
+                        {
+                          "name": "Link",
+                          "type": "TEXT",
+                          "content": "Terms & Conditions"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Column",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "About Us",
+                      "type": "TEXT",
+                      "content": "About Us"
+                    },
+                    {
+                      "name": "Link Container",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Our Story"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Our Values"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Our Team"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Column",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Properties",
+                      "type": "TEXT",
+                      "content": "Properties"
+                    },
+                    {
+                      "name": "Link Container",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Portfolio"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Categories"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Column",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Services",
+                      "type": "TEXT",
+                      "content": "Services"
+                    },
+                    {
+                      "name": "Link Container",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Residential Construction"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Commercial Construction"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Property Management"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Development Services"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Column",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Contact Us",
+                      "type": "TEXT",
+                      "content": "Contact Us"
+                    },
+                    {
+                      "name": "Link Container",
+                      "type": "FRAME",
+                      "children": [
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Contact Form"
+                        },
+                        {
+                          "name": "Link ",
+                          "type": "TEXT",
+                          "content": "Our Offices"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bottom - Container",
+          "type": "FRAME",
+          "children": [
+            {
+              "name": "Wrapper",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Link",
+                  "type": "TEXT",
+                  "content": "@2024 Pinnacle. All Rights Reserved."
+                }
+              ]
+            },
+            {
+              "name": "Wrapper",
+              "type": "FRAME",
+              "children": [
+                {
+                  "name": "Button",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Icon",
+                      "type": "FRAME"
+                    }
+                  ]
+                },
+                {
+                  "name": "Button",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Icon",
+                      "type": "FRAME"
+                    }
+                  ]
+                },
+                {
+                  "name": "Button",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Icon",
+                      "type": "FRAME"
+                    }
+                  ]
+                },
+                {
+                  "name": "Button",
+                  "type": "FRAME",
+                  "children": [
+                    {
+                      "name": "Icon",
+                      "type": "FRAME"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
