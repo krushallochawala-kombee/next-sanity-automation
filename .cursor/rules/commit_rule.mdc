@@ -1,0 +1,117 @@
+---
+alwaysApply: true
+---
+# Commit Message Rules  
+- Use the company commit format: `<type>(<scope>): <short description>`  
+- Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`,   
+`test`, `build`, `ci`, `revert`, `hotfix`  
+- Include scope when relevant: `api`, `ui`, `auth`, `database`, `config`,   
+`docs`, `tests`  
+- Keep subject line concise, under 50 characters  
+- Use imperative mood: "Add feature" not "Added feature"  
+- Avoid vague messages; be clear and descriptive  
+- Reference issues/tickets using `#` prefix when applicable (e.g., `#123`)  
+- Use commit body for bullet points of key changes, explaining the "why" behind   
+each change  
+- Mark breaking changes explicitly with `BREAKING CHANGE` footer if applicable  
+# Examples for Each Commit Type  
+- **feat (Feature)**   
+ Example: `feat(auth): add user profile picture upload feature`   
+ Why: Helps track new capabilities over time   
+- **fix (Bug Fix)**   
+ Example: `fix(ui): resolve crash issue on back navigation`   
+ Why: Marks bug fixes, critical for QA and post-release review   
+- **chore (Maintenance Task)**   
+ Example: `chore: update project dependencies`   
+ Why: Keeps project running smoothly without affecting features   
+- **docs (Documentation)**   
+ Example: `docs(api): add usage instructions for endpoints`   
+ Why: Ensures documentation is up-to-date for onboarding and reference   
+- **style (Code Style)**   
+ Example: `style(ui): apply consistent formatting using linter`   
+ Why: Improves code readability and reduces merge conflicts   
+- **refactor (Code Refactoring)**   
+ Example: `refactor(db): extract query logic to helper module`   
+ Why: Makes code more maintainable   
+- **perf (Performance Improvement)**   
+ Example: `perf(image): lazy load images to reduce memory usage`   
+ Why: Indicates focus on performance improvements   
+- **test (Tests)**   
+ Example: `test(auth): add integration tests for login flow`   
+ Why: Ensures system robustness with new features   
+- **build (Build System)**   
+ Example: `build(android): update Gradle and CocoaPods configuration`   
+ Why: Tracks changes to build or dependency setup   
+- **ci (Continuous Integration)**   
+ Example: `ci: update GitHub Actions to run tests on PRs`   
+ Why: Helps maintain and improve automation processes   
+- **revert (Reverting Commits)** 
+ Example: `revert: revert 'feat(auth): add OAuth login'`   
+ Why: Quickly identifies rolled-back changes   
+- **hotfix (Critical Fix)**   
+ Example: `hotfix(api): fix payment service outage`   
+ Why: Marks critical or urgent fixes for prioritization   
+# Additional Guidelines  
+- Always include detailed bullet points in commit body if necessary   
+- Explain the "why" behind each change   
+- Reference tickets/issues   
+- Mark breaking changes clearly with a footer ---  
+description: Commit message convention rules (Conventional Commits with company   
+standards)  
+alwaysApply: true  
+---  
+# Commit Message Rules  
+- Use the company commit format: `<type>(<scope>): <short description>`  
+- Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`,   
+`test`, `build`, `ci`, `revert`, `hotfix`  
+- Include scope when relevant: `api`, `ui`, `auth`, `database`, `config`,   
+`docs`, `tests`  
+- Keep subject line concise, under 50 characters  
+- Use imperative mood: "Add feature" not "Added feature"  
+- Avoid vague messages; be clear and descriptive  
+- Reference issues/tickets using `#` prefix when applicable (e.g., `#123`)  
+- Use commit body for bullet points of key changes, explaining the "why" behind   
+each change  
+- Mark breaking changes explicitly with `BREAKING CHANGE` footer if applicable  
+# Examples for Each Commit Type  
+- **feat (Feature)**   
+ Example: `feat(auth): add user profile picture upload feature`   
+ Why: Helps track new capabilities over time   
+- **fix (Bug Fix)**   
+ Example: `fix(ui): resolve crash issue on back navigation`   
+ Why: Marks bug fixes, critical for QA and post-release review   
+- **chore (Maintenance Task)**   
+ Example: `chore: update project dependencies`   
+ Why: Keeps project running smoothly without affecting features   
+- **docs (Documentation)**   
+ Example: `docs(api): add usage instructions for endpoints`   
+ Why: Ensures documentation is up-to-date for onboarding and reference   
+- **style (Code Style)**   
+ Example: `style(ui): apply consistent formatting using linter`   
+ Why: Improves code readability and reduces merge conflicts   
+- **refactor (Code Refactoring)**   
+ Example: `refactor(db): extract query logic to helper module`   
+ Why: Makes code more maintainable   
+- **perf (Performance Improvement)**   
+ Example: `perf(image): lazy load images to reduce memory usage`   
+ Why: Indicates focus on performance improvements   
+- **test (Tests)**   
+ Example: `test(auth): add integration tests for login flow`   
+ Why: Ensures system robustness with new features   
+- **build (Build System)**   
+ Example: `build(android): update Gradle and CocoaPods configuration`   
+ Why: Tracks changes to build or dependency setup   
+- **ci (Continuous Integration)**   
+ Example: `ci: update GitHub Actions to run tests on PRs`   
+ Why: Helps maintain and improve automation processes   
+- **revert (Reverting Commits)** 
+ Example: `revert: revert 'feat(auth): add OAuth login'`   
+ Why: Quickly identifies rolled-back changes   
+- **hotfix (Critical Fix)**   
+ Example: `hotfix(api): fix payment service outage`   
+ Why: Marks critical or urgent fixes for prioritization   
+# Additional Guidelines  
+- Always include detailed bullet points in commit body if necessary   
+- Explain the "why" behind each change   
+- Reference tickets/issues   
+- Mark breaking changes clearly with a footer 

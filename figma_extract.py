@@ -84,6 +84,7 @@ def main():
     load_dotenv()
     api_key = os.getenv('FIGMA_API_KEY')
     file_id = os.getenv('FIGMA_FILE_KEY')
+    page_name = os.getenv('FIGMA_PAGE_NAME', None) # New: Optional page name
 
     if not api_key or not file_id:
         print("Error: FIGMA_API_KEY and FIGMA_FILE_KEY must be set in your .env file.")
@@ -95,14 +96,39 @@ def main():
     if not raw_figma_data:
         return # Stop execution if fetching failed
 
-    # 2. Find the starting point for processing (usually the main frame on the first page)
-    try:
-        landing_page_frame = raw_figma_data['document']['children'][0]['children'][0]
-        print(f"Found starting frame: '{landing_page_frame.get('name', 'Unnamed')}'")
-    except (IndexError, KeyError):
-        print("Error: Could not find the main content frame in the expected structure.")
+    # 2. Find the starting point for processing (main frame on the specified or first page)
+    target_page = None
+    if page_name:
+        print(f"Attempting to find Figma page: '{page_name}'")
+        for page in raw_figma_data['document']['children']:
+            if page.get('type') == 'CANVAS' and page.get('name') == page_name:
+                target_page = page
+                break
+        if not target_page:
+            print(f"Error: Page '{page_name}' not found in the Figma file. "
+                  f"Please check the page name and try again. "
+                  f"Available pages: {[p.get('name') for p in raw_figma_data['document']['children'] if p.get('type') == 'CANVAS']}")
+            return
+    else:
+        # Default to the first page if no page_name is provided
+        target_page = raw_figma_data['document']['children'][0]
+        print(f"No FIGMA_PAGE_NAME specified, defaulting to the first page: '{target_page.get('name', 'Unnamed')}'")
+
+    # Now, extract the first 'FRAME' or 'GROUP' from the target_page as the starting point
+    landing_page_frame = None
+    if 'children' in target_page and isinstance(target_page['children'], list):
+        for child in target_page['children']:
+            # Often the main content is a FRAME or GROUP directly under the CANVAS (page)
+            if child.get('type') in ['FRAME', 'GROUP']:
+                landing_page_frame = child
+                break
+    
+    if not landing_page_frame:
+        print("Error: Could not find a suitable main content frame/group on the target page.")
         print("Figma structure might be different. Please check your file's layout.")
         return
+
+    print(f"Found starting frame: '{landing_page_frame.get('name', 'Unnamed')}'")
 
     # 3. Process the raw data to create a simplified version
     print("Simplifying the Figma structure...")

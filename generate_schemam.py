@@ -40,9 +40,10 @@ class AIConfig:
     """Configuration for AI model settings"""
 
     api_key: str
-    model_name: str = "gemini-2.5-flash"  # LangChain prefers this format
+    model_name: str = "gemini-2.5-pro"  # LangChain prefers this format
     rate_limit_delay: float = 1.2
     max_retries: int = 3
+    temperature: float = 0.2
 
 
 @dataclass
@@ -84,7 +85,6 @@ class ProjectConfig:
 class ValidationConfig:
     """Validation rules configuration"""
 
-    max_fields_per_schema: int = 6
     built_in_types: Set[str] = field(
         default_factory=lambda: {
             "string",
@@ -142,7 +142,7 @@ class AppConfig:
 
         ai_config = AIConfig(
             api_key=gemini_api_key,
-            model_name=os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash"),
+            model_name=os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash"),
             rate_limit_delay=float(os.getenv("AI_RATE_LIMIT_DELAY", "1.2")),
             max_retries=int(os.getenv("AI_MAX_RETRIES", "3")),
         )
@@ -176,7 +176,6 @@ class AppConfig:
         )
 
         validation_config = ValidationConfig(
-            max_fields_per_schema=int(os.getenv("MAX_FIELDS_PER_SCHEMA", "6")),
             built_in_types=set(
                 os.getenv(
                     "BUILT_IN_TYPES",
@@ -420,7 +419,6 @@ Set the 'type' property in your defineType call to exactly: '{classification}'
 ### **CRITICAL: MINIMAL FIELD APPROACH**
 - **Create ONLY essential content fields** - avoid over-engineering
 - **Focus on actual content**, not visual styling or layout elements
-- **Maximum {self.config.validation.max_fields_per_schema} fields per schema** unless absolutely necessary
 - **Combine related fields** rather than creating separate ones for each visual element
 
 ### **Rule 1: Use `defineType` and `defineField`**
@@ -1000,7 +998,6 @@ class CodeValidator:
         issues.extend(self._check_validation_syntax(code))
         issues.extend(self._check_missing_imports(code))
         issues.extend(self._check_camel_case_violations(code))
-        issues.extend(self._check_field_count(code))
         issues.extend(self._check_verbose_field_names(code))
         issues.extend(self._check_mixed_array_types(code))
         issues.extend(self._check_missing_preview(code, schema_name))
@@ -1080,14 +1077,6 @@ class CodeValidator:
             ):
                 issues.append(f"⚠️  Type reference '{type_ref}' should be camelCase")
         return issues
-
-    def _check_field_count(self, code: str) -> List[str]:
-        field_count = len(re.findall(r"defineField\s*\(", code))
-        if field_count > self.config.validation.max_fields_per_schema:
-            return [
-                f"⚠️  Schema has {field_count} fields - consider simplifying (recommended: {self.config.validation.max_fields_per_schema} fields max)"
-            ]
-        return []
 
     def _check_verbose_field_names(self, code: str) -> List[str]:
         verbose_patterns = [
@@ -1526,6 +1515,7 @@ class SchemaArchitect:
         print("   📈 SEO fields automatically included in page documents!")
         print("   📝 Create new pages and content with structured data!")
         print("   🎨 All schemas are generated from your Figma design!")
+        print("  done!")
 
 
 def main():
